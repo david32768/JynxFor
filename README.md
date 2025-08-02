@@ -10,7 +10,6 @@
 
 Options are:
 
-```
  --SYSIN use SYSIN as input file
  --USE_STACK_MAP use supplied stack map instead of ASM generated
  --WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
