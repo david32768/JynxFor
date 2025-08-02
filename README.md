@@ -10,20 +10,24 @@
 
 Options are:
 
-*	--SYSIN use SYSIN as input file (it can be abbreviated to '-'). (omit .jx_file)
-*	--USE_STACK_MAP use user stack map instead of ASM generated
-*	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
-*	--WARN_STYLE warn if names non-standard
-*	--GENERATE_LINE_NUMBERS generate line numbers
-*	--SYMBOLIC_LOCAL local variables are symbolic not absolute integers
-*	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier
-*	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
-*	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
-*	--VALIDATE_ONLY do not output class file
-*	--TRACE print (ASMifier) trace
-*	--DEBUG exit with stack trace if error
-*	--VERBOSE print all log messages
-*	--TREAT_WARNINGS_AS_ERRORS treat warnings as errors
+```
+ --SYSIN use SYSIN as input file
+ --USE_STACK_MAP use supplied stack map instead of ASM generated
+ --WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
+ --WARN_STYLE warn if names non-standard
+ --GENERATE_LINE_NUMBERS generate line numbers
+ --BASIC_VERIFIER only use ASM BasicVerifier
+ --CHECK_REFERENCES check that called methods or used fields exist (on class path)
+ --VALIDATE_ONLY do not output class file
+ --TRACE print (ASMifier) trace
+ --SYMBOLIC_LOCAL local variables are symbolic not absolute integers
+ --VALHALLA Valhalla - limited support; may change
+ --VERIFIER_PLATFORM Use ClassFile Verifier with Platform Loader only (the default is system loader)
+ --GENERIC_SWITCH optimise switch instruction size
+ --DEBUG print stack trace(s)
+ --INCREASE_MESSAGE_SEVERITY treat warnings as errors etc.
+ --SUPPRESS_WARNINGS suppress warnings
+
 ```
 
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
