@@ -1,4 +1,4 @@
-# Grammar?
+# Grammar
 
 ## Outline
 
@@ -7,14 +7,14 @@
 [<macro-library>]?
 [<record>|<define-module>|<package>|<define-annotation>|<enum>|<interface>|<class>]
 
-<version> = .version V[0-9]+ <options>
+<version> = .version V[0-9]+ [<option>]*
 <macro-library> = .macrolib <name>
 ```
 
 ## Class
 
 ```
-<class> = .class <access-flags> <classid>
+<class> = .class <access-flags> <class-name>
 	[<class-header>]?
 	[<field>]*
 	[<method>]*
@@ -23,7 +23,7 @@
 ## Interface
 
 ```
-<interface> = .interface <access-flags> <classid>
+<interface> = .interface <access-flags> <class-name>
 	[<class-header>]?
 	[<field>]*
 	[<method>]*
@@ -32,7 +32,7 @@
 ## Enum
 
 ```
-<enum> = .enum <access-flags> <classid>
+<enum> = .enum <access-flags> <class-name>
 	[<class-header>]?
 	[<field>]*
 	[<method>]*
@@ -41,11 +41,12 @@
 ## Record
 
 ```
-<record> = [.record <access-flags> <classid>]
+<record> = [.record <access-flags> <class-name>]
 	[<class-header>]?
 	[<component>]*
 	[<field>]* ; .field for each component must be present
 	[<method>]* ; .method for each component must be present
+
 <component> = [<simple-component>|<compound-component>]
 <simple-component> = .component <component-name> <desc>
 
@@ -57,7 +58,7 @@
 ## Define Annotation
 
 ```
-<define-annotation> = .define_annotation <access-flags> <classid>
+<define-annotation> = .define_annotation <access-flags> <class-name>
 	[class-header]?
 	[<method>]
 ```
@@ -65,7 +66,7 @@
 ## Package
 
 ```
-<package> = .package <classid> ; omit "/package-info" from name
+<package> = .package <class-name> ; omit "/package-info" from name
 	<annotation>*
 ```
 
@@ -134,7 +135,7 @@
 
 *	super
 ```
-<super> = .super <class-id>
+<super> = .super <class-name>
 ```
 *	implements
 ```
@@ -264,9 +265,9 @@
 ```
 ; must use array if more than one throw
 <throws> = .throws [<single-throw>|<multiple-throw>]
-<single-throw> = <class-id>
+<single-throw> = <class-name>
 <multiple-throw> = .array
-	[<class-id>]+
+	[<class-name>]+
 .end_array
 ```
 
@@ -326,7 +327,7 @@
 
 *	invokeinterface
 ```
-<invokeinterface> = invokeinterface @<class-id> ; omit number as will be calculated
+<invokeinterface> = invokeinterface @<class-name> ; omit number as will be calculated
 ```
 
 *	invokestatic
