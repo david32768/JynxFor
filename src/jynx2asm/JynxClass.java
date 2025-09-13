@@ -14,7 +14,9 @@ import static com.github.david32768.jynxfree.jynx.Directive.dir_module;
 import static com.github.david32768.jynxfree.jynx.Directive.end_comment;
 import static com.github.david32768.jynxfree.jynx.NameDesc.CLASS_NAME;
 
+import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfor.ops.JynxOps;
+import com.github.david32768.jynxfor.ops.JynxTranslator;
 import com.github.david32768.jynxfor.verify.Resolver;
 import com.github.david32768.jynxfor.verify.Verifier;
 
@@ -95,7 +97,8 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
             return jclass.toByteArray();
         } catch (RuntimeException rtex) {
             LOG(rtex);
-            LOG(M123, source, rtex); // "compilation of %s failed because of %s"
+            // "%s of %s failed because of %s"
+            LOG(M123, MainOption.ASSEMBLY.name().toLowerCase(), source, rtex);
             return null;
         }
     }
@@ -146,11 +149,13 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
         }
         this.jvmVersion = jvmversion;
         Global.setJvmVersion(jvmversion);
-        Global.setStyleChecker(new JynxStyleChecker());
         if (!OPTIONS().isEmpty()) {
             LOG(M88, OPTIONS());  // "options = %s"
         }
-        this.opmap = JynxOps.getInstance(jvmVersion);
+        JynxTranslator translator = JynxTranslator.getInstance();
+        JynxGlobal.set();
+        JynxGlobal.setTranslator(translator);
+        this.opmap = JynxOps.getInstance(jvmVersion, translator);
     }
     
     private void setOptions(Line line) {
@@ -243,7 +248,7 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
         Access accessname = getAccess(line, flags, classtype, jvmVersion);
         jclassnode = JynxClassNode.getInstance(accessname, resolver);
         jclasshdr = jclassnode.getJynxClassHdr(source, defaultSource, resolver);
-        Global.setClassName(jclasshdr.getClassName());
+        JynxGlobal.setClassName(jclasshdr.getClassName());
         state = State.getState(classtype);
         sd = jclasshdr;
     }
@@ -413,9 +418,10 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
         if (OPTION(GlobalOption.BASIC_VERIFIER)) {
             return bytes;
         }
-        MainOption.VERIFY.printHeader();
+        Global.pushGlobal(MainOption.VERIFY);
         Verifier verifier = new Verifier(resolver);
         boolean ok = verifier.verify(bytes);
+        Global.popGlobal();
         return ok? bytes: null;
     }
     

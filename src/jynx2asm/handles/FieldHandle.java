@@ -6,8 +6,8 @@ import java.util.Objects;
 
 import org.objectweb.asm.Handle;
 
+import static com.github.david32768.jynxfor.my.JynxGlobal.CLASS_NAME;
 import static com.github.david32768.jynxfor.my.Message.M275;
-import static com.github.david32768.jynxfree.jynx.Global.CLASS_NAME;
 import static com.github.david32768.jynxfree.jynx.NameDesc.CLASS_NAME;
 import static com.github.david32768.jynxfree.jynx.NameDesc.FIELD_DESC;
 import static com.github.david32768.jynxfree.jynx.NameDesc.FIELD_NAME;

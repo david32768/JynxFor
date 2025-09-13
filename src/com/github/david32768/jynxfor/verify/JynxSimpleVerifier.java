@@ -76,10 +76,6 @@ public class JynxSimpleVerifier extends SimpleVerifier {
         return resolver.isInterface(type.getInternalName()) || super.isInterface(type);
     }
 
-    public void setLoader(ClassLoader loader) {
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     protected Type getSuperClass(Type type) {
         Optional<String> superClass = resolver.getSuperClass(type.getInternalName());

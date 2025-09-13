@@ -7,6 +7,7 @@ import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jvm.NumType.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 
+import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfree.jvm.HandleType;
 import com.github.david32768.jynxfree.jvm.NumType;
 import com.github.david32768.jynxfree.jynx.NameDesc;
@@ -111,7 +112,7 @@ public class String2Object {
     }
     
     public Type parseType(String token) {
-        token = TRANSLATE_TYPE(token, true);
+        token = JynxGlobal.TRANSLATE_TYPE(token, true);
         NameDesc.FIELD_DESC.validate(token);
         return Type.getType(token);
     }

@@ -8,6 +8,7 @@ import static com.github.david32768.jynxfree.jynx.NameDesc.CLASS_NAME;
 import static com.github.david32768.jynxfree.jynx.NameDesc.METHOD_NAME;
 import static com.github.david32768.jynxfree.jynx.NameDesc.METHOD_NAME_DESC;
 
+import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfree.jynx.Global;
 
 import static jynx2asm.handles.HandlePart.DESC;
@@ -48,7 +49,7 @@ public class EnclosingMethodHandle implements JynxHandle {
         String name = map.get(NAME);
         String desc = map.get(DESC);
         CLASS_NAME.validate(owner);
-        if (owner.equals(Global.CLASS_NAME())) {
+        if (owner.equals(JynxGlobal.CLASS_NAME())) {
             Global.LOG(M303); // "Enclosing method cannot be in enclosed class"
         }
         METHOD_NAME.validate(name);

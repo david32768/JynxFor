@@ -7,11 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import static com.github.david32768.jynxfor.my.JynxGlobal.CLASS_NAME;
 import static com.github.david32768.jynxfor.my.Message.M116;
 import static com.github.david32768.jynxfor.my.Message.M218;
 import static com.github.david32768.jynxfor.my.Message.M222;
 import static com.github.david32768.jynxfor.my.Message.M97;
-import static com.github.david32768.jynxfree.jynx.Global.CLASS_NAME;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.SYSIN;

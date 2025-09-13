@@ -14,6 +14,7 @@ import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
 
 import static com.github.david32768.jynxfree.jynx.GlobalOption.GENERATE_LINE_NUMBERS;
 
+import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfor.ops.DynamicOp;
 import com.github.david32768.jynxfor.ops.IndentType;
 import com.github.david32768.jynxfor.ops.JvmOp;
@@ -102,7 +103,7 @@ public class String2Insn {
         JynxLabel target = labelMap.defineJynxLabel(lab, line);
         if (!stack.isEndToken()) {
             String desc = stack.asString();
-            desc = TRANSLATE_PARMS(desc);
+            desc = JynxGlobal.TRANSLATE_PARMS(desc);
             boolean ok = NameDesc.PARMS.validate(desc);
             if (ok) {
                 FrameElement[] elements = OperandStack.frameElementsFrom(desc);
@@ -201,7 +202,7 @@ public class String2Insn {
     
     private Instruction arg_class(JvmOp jvmop) {
         String typeo = line.nextToken().asString();
-        String type = TRANSLATE_TYPE(typeo, false);
+        String type = JynxGlobal.TRANSLATE_TYPE(typeo, false);
         if (jvmop == JvmOp.asm_new) {
             CLASS_NAME.validate(type);
             checker.usedNew(type);
@@ -372,10 +373,22 @@ public class String2Insn {
     }
 
     private Instruction arg_switch(JvmOp jvmop) {
+        int low = Integer.MIN_VALUE;
+        int high = Integer.MAX_VALUE;
+        boolean hasLH = false;
+        if (jvmop == JvmOp.asm_tableswitch) {
+            Token token = line.peekToken();
+            if (!token.is(res_default)) {
+                low = line.nextToken().asInt();
+                high = line.nextToken().asInt();
+                hasLH = true;
+            }
+        }
         line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
         if (OPTION(GlobalOption.GENERIC_SWITCH)) {
             jvmop = JvmOp.opc_switch;
+            hasLH = false;
         }
         SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
         try (TokenArray dotarray = line.getTokenArray()) {
@@ -383,6 +396,10 @@ public class String2Insn {
             while (true) {
                 Token value = dotarray.firstToken();
                 if (value.is(right_array)) {
+                    if (hasLH) {
+                        swmap.putIfAbsent(low, dflt);
+                        swmap.putIfAbsent(high, dflt);
+                    }
                     return SwitchInstruction.getInstance(jvmop, dflt, swmap);
                 }
                 int key = value.asInt();
@@ -390,7 +407,13 @@ public class String2Insn {
                 Token label = dotarray.nextToken();
                 JynxLabel target = getJynxLabel(label);
                 dotarray.noMoreTokens();
-
+                
+                if (key < low || key > high) {
+                    // "key %d is not in range [%d,%d]"
+                    LOG(M626, key, low, high);
+                    continue;
+                }
+                
                 if (jvmop != JvmOp.asm_tableswitch && target.equals(dflt)) {
                     // "unneccessary case %d -> %s in %s as target is default label"
                     LOG(M189, key, target, jvmop);

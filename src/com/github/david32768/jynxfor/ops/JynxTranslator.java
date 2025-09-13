@@ -10,13 +10,11 @@ import static com.github.david32768.jynxfor.my.Message.M325;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
-import com.github.david32768.jynxfree.jynx.Global;
 import com.github.david32768.jynxfree.jynx.NameDesc;
-import com.github.david32768.jynxfree.jynx.Translator;
 
 import jynx2asm.ConstType;
 
-public class JynxTranslator implements Translator {
+public class JynxTranslator {
 
     private final Map<String,String> ownerTranslations;
     private final Map<String,String> parmTranslations;
@@ -28,17 +26,13 @@ public class JynxTranslator implements Translator {
     }
 
     public static JynxTranslator getInstance() {
-        JynxTranslator translator =  new JynxTranslator();
-        Global.setTranslator(translator);
-        return translator;
+        return new JynxTranslator();
     }
 
-    @Override
     public void addOwnerTranslations(Map<String, String> add) {
         addTranslations(ownerTranslations, add, NameDesc.OWNER_VALUE_NAME);
     }
     
-    @Override
     public void addParmTranslations(Map<String, String> add) {
         addTranslations(parmTranslations, add, NameDesc.PARM_VALUE_NAME);
     }
@@ -59,7 +53,6 @@ public class JynxTranslator implements Translator {
         }
     }
     
-    @Override
     public String translateType(String classname, String parm, boolean semi) {
         int last = parm.lastIndexOf('[');
         String type = parm.substring(last + 1); // OK if last == -1
@@ -97,7 +90,6 @@ public class JynxTranslator implements Translator {
         return prefix + type;
     }
     
-    @Override
     public String translateDesc(String classname, String str) {
         int indexto = str.indexOf("->");
         if (indexto < 0) { 
@@ -114,7 +106,6 @@ public class JynxTranslator implements Translator {
         return parm + rtype;
     }
     
-    @Override
     public String translateParms(String classname, String parms) {
         if (parmTranslations.isEmpty() || parms.charAt(0) != '(' || parms.charAt(parms.length() - 1) != ')') { 
             return parms;
@@ -129,7 +120,6 @@ public class JynxTranslator implements Translator {
         return sb.toString();
     }
     
-    @Override
     public String translateOwner(String classname, String str) {
         if (str == null || str.equals("/")) {
             return classname;

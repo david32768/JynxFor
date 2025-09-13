@@ -23,7 +23,6 @@ import com.github.david32768.jynxfree.jvm.JvmVersion;
 import com.github.david32768.jynxfree.jvm.JvmVersionRange;
 import com.github.david32768.jynxfree.jynx.LogAssertionError;
 import com.github.david32768.jynxfree.jynx.NameDesc;
-import com.github.david32768.jynxfree.jynx.Translator;
 
 public class JynxOps {
 
@@ -33,19 +32,18 @@ public class JynxOps {
     
     private Predicate<String> labelTester;
     
-    private final Translator translator;
+    private final JynxTranslator translator;
     
 
-    private JynxOps(JvmVersion jvmversion) {
+    private JynxOps(JvmVersion jvmversion, JynxTranslator translator) {
         this.opmap = new HashMap<>(512);
         this.macrolibs = new HashMap<>();
         this.jvmVersion = jvmversion;
-        this.translator = JynxTranslator.getInstance();
+        this.translator = translator;
     }
 
-    public static JynxOps getInstance(JvmVersion jvmversion) {
-        JynxOps ops =  new JynxOps(jvmversion);
-        return ops;
+    public static JynxOps getInstance(JvmVersion jvmversion, JynxTranslator translator) {
+        return new JynxOps(jvmversion, translator);
     }
 
     private static final int MAX_SIMPLE = 16;
@@ -176,36 +174,6 @@ public class JynxOps {
             for (JynxOp op : macroOp.getJynxOps()) {
                 print(pw, op, level + 1);
             }
-        }
-    }
-
-    public static void main(String[] args) {
-        if (args.length == 0 || args.length == 1 && (args[0].equals("-h") || args[0].equals("--help"))) {
-            System.err.println("Usage: JynxOps [macrolib]* [jynxop]");
-            System.exit(1);
-        }
-        JynxOps ops  = getInstance(JvmVersion.DEFAULT_VERSION);
-        int last = args.length - 1;
-        for (int i = 0; i < last; ++i) {
-            ops.addMacroLib(args[i]);
-        }
-        System.out.format("number of Jynx ops = %d%n", ops.opmap.size());
-        String jopstr = args[last];
-        JynxOp jop = ops.get(jopstr);
-        if (jop == null) {
-            System.err.format("%s is an unknown JynxOp", jopstr);
-            System.exit(1);
-        }
-        try (PrintWriter pw = new PrintWriter(System.out)) {
-            pw.format("JynxOp %s: %s, ", jop, jop.getClass());
-            Integer length = jop.length();
-            if (length == null) {
-                pw.println(" length is variable or unknown");
-            } else {
-                pw.format(" length is %d%n", length);
-            }
-            pw.format("expansion of %s is :%n", jop);
-            print(pw, jop);
         }
     }
 

@@ -2,7 +2,7 @@ package com.github.david32768.jynxfor.ops;
 
 import java.util.function.UnaryOperator;
 
-import com.github.david32768.jynxfree.jynx.Global;
+import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 
 import jynx2asm.LabelStack;
@@ -101,7 +101,7 @@ public class AdjustToken implements LineOp{
     }
     
     public static LineOp translateDesc() {
-        return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,Global::TRANSLATE_DESC);
+        return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,JynxGlobal::TRANSLATE_DESC);
     }
     
 }

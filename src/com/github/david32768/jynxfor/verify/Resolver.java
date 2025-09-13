@@ -200,12 +200,8 @@ public class Resolver {
 
     public ClassHierarchyResolverOption getResolverOption() {
         ClassHierarchyResolver resolver = ClassHierarchyResolver.ofClassLoading(loader);
-        if (interfaces.isEmpty() && classToSuperClass.isEmpty()) {
-            return ClassHierarchyResolverOption.of(resolver);    
-        } else {
-            var hints = ClassHierarchyResolver.of(getInterfaces(), getSuperMap());
-            return ClassHierarchyResolverOption.of(hints.orElse(resolver));
-        }        
+        var hints = ClassHierarchyResolver.of(getInterfaces(), getSuperMap());
+        return ClassHierarchyResolverOption.of(hints.orElse(resolver));
     }
     
 }

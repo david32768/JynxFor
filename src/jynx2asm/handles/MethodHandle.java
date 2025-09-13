@@ -7,12 +7,12 @@ import java.util.Objects;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.MethodInsnNode;
 
+import static com.github.david32768.jynxfor.my.JynxGlobal.CLASS_NAME;
 import static com.github.david32768.jynxfor.my.Message.M135;
 import static com.github.david32768.jynxfor.my.Message.M139;
 import static com.github.david32768.jynxfor.my.Message.M145;
 import static com.github.david32768.jynxfor.my.Message.M242;
 import static com.github.david32768.jynxfree.jynx.Global.CHECK_SUPPORTS;
-import static com.github.david32768.jynxfree.jynx.Global.CLASS_NAME;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.NameDesc.ARRAY_METHOD_NAME_DESC;
 import static com.github.david32768.jynxfree.jynx.NameDesc.CLASS_NAME;

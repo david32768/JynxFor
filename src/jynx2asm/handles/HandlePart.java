@@ -9,6 +9,7 @@ import static com.github.david32768.jynxfor.my.Message.M305;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.NameDesc.PACKAGE_NAME;
 
+import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfree.jvm.Constants;
 import com.github.david32768.jynxfree.jvm.HandleType;
 import com.github.david32768.jynxfree.jynx.Global;
@@ -62,14 +63,14 @@ public enum HandlePart {
         }
         EnumMap<HandlePart,String> result = new EnumMap<>(HandlePart.class);
         if (mclass != null) {
-            mclass = Global.TRANSLATE_OWNER(mclass);
+            mclass = JynxGlobal.TRANSLATE_OWNER(mclass);
             result.put(OWNER, mclass);
         }
         if (mname != null) {
             result.put(NAME, mname);
         }
         if (mdesc != null) {
-            mdesc = Global.TRANSLATE_DESC(mdesc);
+            mdesc = JynxGlobal.TRANSLATE_DESC(mdesc);
             result.put(DESC, mdesc);
         }
         if (itf != null) {
@@ -87,7 +88,7 @@ public enum HandlePart {
             } else if(!inresult && inexpected) {
                 switch(part) {
                     case INTERFACE -> {}
-                    case OWNER -> result.put(OWNER, Global.CLASS_NAME());
+                    case OWNER -> result.put(OWNER, JynxGlobal.CLASS_NAME());
                     default -> throw new LogIllegalArgumentException(M300, part); // "required %s is missing"
                 }
             }

@@ -3,11 +3,11 @@ package jynx2asm.handles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 
+import static com.github.david32768.jynxfor.my.JynxGlobal.CLASS_NAME;
 import static com.github.david32768.jynxfor.my.Message.M319;
 import static com.github.david32768.jynxfor.my.Message.M400;
 import static com.github.david32768.jynxfor.my.Message.M407;
 
-import static com.github.david32768.jynxfree.jynx.Global.CLASS_NAME;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
 import com.github.david32768.jynxfree.jvm.Context;
