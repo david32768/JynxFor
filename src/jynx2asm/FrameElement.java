@@ -11,6 +11,8 @@ import org.objectweb.asm.Type;
 import static com.github.david32768.jynxfor.my.Message.M206;
 import static com.github.david32768.jynxfor.my.Message.M906;
 
+import com.github.david32768.jynxfor.scan.ConstType;
+
 import com.github.david32768.jynxfree.jvm.FrameType;
 import com.github.david32768.jynxfree.jynx.LogAssertionError;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;

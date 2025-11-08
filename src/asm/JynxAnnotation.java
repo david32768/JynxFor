@@ -13,6 +13,13 @@ import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
 
 import static com.github.david32768.jynxfree.jvm.Context.ANNOTATION;
 
+import com.github.david32768.jynxfor.scan.ConstType;
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.LinesIterator;
+import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfor.scan.TokenArray;
+
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jvm.TypeRef;
 import com.github.david32768.jynxfree.jynx.Directive;
@@ -21,13 +28,6 @@ import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
-
-import jynx2asm.ConstType;
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
-import jynx2asm.LinesIterator;
-import jynx2asm.Token;
-import jynx2asm.TokenArray;
 
 public class JynxAnnotation {
 

@@ -5,6 +5,8 @@ import java.util.Map;
 
 import static com.github.david32768.jynxfor.my.Message.M31;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
 

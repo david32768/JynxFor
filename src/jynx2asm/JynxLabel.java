@@ -11,6 +11,8 @@ import org.objectweb.asm.Label;
 import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 import jynx2asm.frame.JynxLabelFrame;
 import jynx2asm.frame.LocalFrame;
 import jynx2asm.frame.OperandStackFrame;

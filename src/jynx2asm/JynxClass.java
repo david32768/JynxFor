@@ -17,6 +17,9 @@ import static com.github.david32768.jynxfree.jynx.NameDesc.CLASS_NAME;
 import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfor.ops.JynxOps;
 import com.github.david32768.jynxfor.ops.JynxTranslator;
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
 import com.github.david32768.jynxfor.verify.Resolver;
 import com.github.david32768.jynxfor.verify.Verifier;
 
@@ -149,9 +152,6 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
         }
         this.jvmVersion = jvmversion;
         Global.setJvmVersion(jvmversion);
-        if (!OPTIONS().isEmpty()) {
-            LOG(M88, OPTIONS());  // "options = %s"
-        }
         JynxTranslator translator = JynxTranslator.getInstance();
         JynxGlobal.set();
         JynxGlobal.setTranslator(translator);
@@ -172,6 +172,7 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
                 LOG(M105,token); // "unknown option %s - ignored"
             }
         }
+        Global.printAddedOptions();
     }
     
     private void setJvmVersion(Line line) {
@@ -243,7 +244,7 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
     public void setClass(Directive dir) {
         Line line = js.getLine();
         var flags = line.getAccFlags();
-        ClassType classtype = ClassType.of(dir, flags);
+        ClassType classtype = ClassType.ofDir(dir);
         LOG(M89, file_source,jvmVersion); // "file = %s version = %s"
         Access accessname = getAccess(line, flags, classtype, jvmVersion);
         jclassnode = JynxClassNode.getInstance(accessname, resolver);

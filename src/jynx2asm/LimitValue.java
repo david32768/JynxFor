@@ -3,6 +3,8 @@ package jynx2asm;
 import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 public class LimitValue {
     
     private final Type type;

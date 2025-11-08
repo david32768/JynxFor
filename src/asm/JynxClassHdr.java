@@ -14,15 +14,16 @@ import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.NameDesc.*;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
 
-import static com.github.david32768.jynxfree.jvm.AccessFlag.acc_final;
-import static com.github.david32768.jynxfree.jvm.AccessFlag.acc_super;
-import static com.github.david32768.jynxfree.jynx.GlobalOption.VALHALLA;
-
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.TokenArray;
 import com.github.david32768.jynxfor.verify.Resolver;
+
 import com.github.david32768.jynxfree.jvm.AccessFlag;
 import com.github.david32768.jynxfree.jvm.Constants;
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jvm.JvmVersion;
+import com.github.david32768.jynxfree.jvm.StandardAttribute;
 import com.github.david32768.jynxfree.jynx.Access;
 import com.github.david32768.jynxfree.jynx.ClassType;
 import com.github.david32768.jynxfree.jynx.Directive;
@@ -30,10 +31,7 @@ import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
 
 import jynx2asm.handles.EnclosingMethodHandle;
 import jynx2asm.handles.HandlePart;
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
 import jynx2asm.ObjectLine;
-import jynx2asm.TokenArray;
 import jynx2asm.UniqueDirectiveChecker;
 
 public class JynxClassHdr implements ContextDependent, HasAccessFlags {
@@ -106,12 +104,15 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             case dir_debug -> setDebug(line);
             case dir_super -> setSuper(line);
             case dir_implements -> setImplements(line);
-            case dir_inner_class, dir_inner_enum, dir_inner_interface, dir_inner_define_annotation, dir_inner_record -> setInnerClass(dir,line);
+            case dir_inner_class, dir_inner_enum, dir_inner_interface,
+                    dir_inner_define_annotation, dir_inner_record,
+                    dir_inner_value_class -> setInnerClass(dir,line);
             case dir_enclosing_method, dir_outer_class -> setOuterClass(dir,line);
             case dir_nesthost -> setHostClass(line);
             case dir_nestmember -> setMemberClass(line);
             case dir_permittedSubclass -> setPermittedSubclass(line);
-            case dir_hints -> setHints(js,line);
+            case dir_descriptors -> setDescriptors(line);
+            case dir_hints -> setHints(line);
             default -> visitCommonDirective(dir, line, js);
         }
     }
@@ -161,20 +162,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private void setInnerClass(Directive dir,Line line) {
         EnumSet<AccessFlag> accflags = line.getAccFlags();
-        ClassType classtype;
-        switch (dir) {
-            case dir_inner_class -> {
-                classtype = ClassType.BASIC;
-                if (OPTION(VALHALLA) && !accflags.contains(acc_super)) {
-                    classtype = ClassType.VALUE_CLASS;
-                }
-            }
-            case dir_inner_enum -> classtype = ClassType.ENUM;
-            case dir_inner_record -> classtype = ClassType.RECORD;
-            case dir_inner_interface -> classtype = ClassType.INTERFACE;
-            case dir_inner_define_annotation -> classtype = ClassType.ANNOTATION_CLASS;
-            default -> throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
-        }
+        ClassType classtype = ClassType.ofInnerDir(dir);
         String innerclass = line.nextToken().asName();
         Optional<String> outerclass = line.optAfter(res_outer);
         Optional<String> innername = line.optAfter(res_innername);
@@ -259,7 +247,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             hdrnode.nestHostClass = host;
             inner = true;
         } else {
-            LOG(M304, Directive.dir_nestmember, hostline); // "%s has already been defined%n  %s"
+            // "%s has already been defined%n  %s"
+            LOG(M304, Directive.dir_nestmember, hostline);
         }
     }
 
@@ -270,21 +259,30 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                     .stream()
                     .forEach(hdrnode::visitNestMember);
         } else {
-            LOG(M304, Directive.dir_nesthost, hostline); // "%s has already been defined%n  %s"
+            // "%s has already been defined%n  %s"
+            LOG(M304, Directive.dir_nesthost, hostline);
+            var _ = TokenArray.listString(Directive.dir_nestmember, line, this::sameOwnerAsClass);
         }
     }
 
+    private void setDescriptors(Line line) {
+        // "known attribute %s not supported"
+        LOG(M655, StandardAttribute.LoadableDescriptors);
+        var _ = TokenArray.listString(Directive.dir_descriptors, line, CLASS_PARM);
+    }
+
     private void setPermittedSubclass(Line line) {
-        if (accessName.is(acc_final)) {
+        if (accessName.is(AccessFlag.acc_final)) {
             LOG(M313,Directive.dir_permittedSubclass); // "final class cannot have %s"
-            return;
-        }
-        TokenArray.listString(Directive.dir_permittedSubclass, line, CLASS_NAME)
+            var _ = TokenArray.listString(Directive.dir_permittedSubclass, line, CLASS_NAME);
+        } else {
+            TokenArray.listString(Directive.dir_permittedSubclass, line, CLASS_NAME)
                 .stream()
                 .forEach(hdrnode::visitPermittedSubclass);
+        }
     }
     
-    private void setHints(JynxScanner js, Line line) {
+    private void setHints(Line line) {
         try (TokenArray dotarray = line.getTokenArray()) {
             resolver.addResolver(dotarray);
         }

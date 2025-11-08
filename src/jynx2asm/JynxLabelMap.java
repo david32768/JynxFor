@@ -15,6 +15,8 @@ import static com.github.david32768.jynxfor.my.Message.M217;
 import static com.github.david32768.jynxfor.my.Message.M284;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 import com.github.david32768.jynxfree.jynx.NameDesc;

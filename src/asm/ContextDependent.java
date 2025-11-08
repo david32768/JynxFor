@@ -5,12 +5,12 @@ import org.objectweb.asm.TypePath;
 
 import static com.github.david32768.jynxfor.my.Message.*;
 
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
-
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
 
 public interface ContextDependent {
     

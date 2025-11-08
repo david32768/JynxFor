@@ -5,10 +5,11 @@ import static com.github.david32768.jynxfor.my.Message.M322;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jynx.JynxMessage;
 
 import jynx2asm.LabelStack;
-import jynx2asm.Line;
 
 public class MessageOp implements LineOp {
     

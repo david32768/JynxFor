@@ -6,12 +6,13 @@ import static com.github.david32768.jynxfor.my.Message.M412;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jynx.JynxMessage;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
 
 import jynx2asm.LabelStack;
-import jynx2asm.Line;
-import jynx2asm.Token;
 
 public class TestToken implements LineOp {
     

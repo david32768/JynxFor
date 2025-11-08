@@ -11,14 +11,15 @@ import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.NameDesc.*;
 
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jvm.Constants;
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jynx.Directive;
 
 import jynx2asm.handles.LocalFieldHandle;
 import jynx2asm.handles.LocalMethodHandle;
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
 import jynx2asm.UniqueDirectiveChecker;
 
 public class JynxComponentNode implements ContextDependent {

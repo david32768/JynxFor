@@ -17,6 +17,7 @@ import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.Directive.dir_stack;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 
 import com.github.david32768.jynxfree.jynx.LogAssertionError;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
@@ -25,7 +26,6 @@ import jynx2asm.FrameElement;
 import jynx2asm.handles.JynxHandle;
 import jynx2asm.JynxLabel;
 import jynx2asm.LimitValue;
-import jynx2asm.Line;
 
 public class OperandStack {
 

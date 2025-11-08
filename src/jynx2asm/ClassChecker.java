@@ -17,8 +17,11 @@ import static com.github.david32768.jynxfree.jvm.AccessFlag.acc_final;
 import static com.github.david32768.jynxfree.jvm.Context.FIELD;
 import static com.github.david32768.jynxfree.jvm.Context.METHOD;
 import static com.github.david32768.jynxfree.jynx.ClassType.RECORD;
+import static com.github.david32768.jynxfree.jynx.ClassType.VALUE_RECORD;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jvm.AccessFlag;
 import com.github.david32768.jynxfree.jvm.Constants;
@@ -301,7 +304,7 @@ public class ClassChecker {
         }
         if (!jfn.isStatic()) {
             ++instanceFieldCt;
-            if (classType == RECORD) {
+            if (classType == RECORD || classType == VALUE_RECORD) {
                 JynxComponentNode jcn = components.get(name);
                 if (jcn != null && !jcn.getDesc().equals(jfn.getDesc())) {
                     // "component %s description %s differs from field description %s"
@@ -439,11 +442,11 @@ public class ClassChecker {
     
     public void visitEnd() {
         switch (classType) {
-            case RECORD -> {
+            case RECORD, VALUE_RECORD -> {
                 visitRecordEnd();
                 visitClassEnd();
             }
-            case ENUM, BASIC, VALUE_CLASS -> visitClassEnd();
+            case ENUM, IDENTITY_CLASS, VALUE_CLASS -> visitClassEnd();
             case INTERFACE -> checkMissing(REF_invokeInterface);
             case ANNOTATION_CLASS -> {
             }

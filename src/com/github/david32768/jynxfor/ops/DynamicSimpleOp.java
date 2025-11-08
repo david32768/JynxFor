@@ -4,13 +4,14 @@ import java.util.Objects;
 
 import org.objectweb.asm.ConstantDynamic;
 
+import com.github.david32768.jynxfor.instruction.DynamicInstruction;
+import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jynx.NameDesc;
 
-import asm.instruction.DynamicInstruction;
-import asm.instruction.Instruction;
 import jynx2asm.ClassChecker;
 import jynx2asm.JynxConstantDynamic;
-import jynx2asm.Line;
 
 public class DynamicSimpleOp implements DynamicOp {
 
@@ -42,7 +43,7 @@ public class DynamicSimpleOp implements DynamicOp {
     }
 
     @Override
-    public Instruction getInstruction(Line line, ClassChecker checker) {
+    public JynxInstruction getInstruction(Line line, ClassChecker checker) {
         String namex = name;
         String descx = desc;
         if (namex == null) {

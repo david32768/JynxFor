@@ -25,15 +25,15 @@ import static com.github.david32768.jynxfree.jynx.ReservedWord.res_extends;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.res_interface;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.right_array;
 
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfor.scan.TokenArray;
+
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
-
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
-import jynx2asm.Token;
-import jynx2asm.TokenArray;
 
 public class Resolver {
 

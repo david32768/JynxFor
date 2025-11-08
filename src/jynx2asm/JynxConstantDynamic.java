@@ -29,6 +29,12 @@ import static com.github.david32768.jynxfree.jynx.ReservedWord.right_brace;
 
 import com.github.david32768.jynxfor.my.JynxGlobal;
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.ConstType;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.String2Object;
+import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfor.scan.TokenArray;
+
 import com.github.david32768.jynxfree.jvm.ConstantPoolType;
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jvm.Feature;

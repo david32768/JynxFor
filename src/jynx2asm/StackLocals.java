@@ -15,15 +15,17 @@ import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 import static com.github.david32768.jynxfree.jynx.Global.SUPPORTS;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.WARN_UNNECESSARY_LABEL;
 
+import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.instruction.LabelInstruction;
+import com.github.david32768.jynxfor.instruction.LineInstruction;
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 
-import asm.instruction.Instruction;
-import asm.instruction.LabelInstruction;
-import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jynx2asm.frame.LocalFrame;
 import jynx2asm.frame.LocalVars;
@@ -185,7 +187,7 @@ public class StackLocals {
         }
     }
     
-    private void checkMethodLength(Instruction in) {
+    private void checkMethodLength(JynxInstruction in) {
         int minbefore = minLength;
         int maxbefore = maxLength;
         minLength += in.minLength();
@@ -200,11 +202,12 @@ public class StackLocals {
         }
     }
     
-    public boolean visitInsn(Instruction in, Line line) {
+    public boolean visitInsn(JynxInstruction in, Line line) {
         if (in == null) {
             return false;
         }
-        JvmOp jvmop = in.resolve(minLength,maxLength);
+        in.resolve(minLength,maxLength);
+        JvmOp jvmop = in.jvmop();
         if (in instanceof LabelInstruction) {
             in.adjust(this);
             return true;

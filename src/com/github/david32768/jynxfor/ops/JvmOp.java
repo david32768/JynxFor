@@ -19,6 +19,7 @@ import static com.github.david32768.jynxfor.my.Message.M362;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
+import com.github.david32768.jynxfree.classfile.Opcodes;
 import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jvm.JvmVersion;
 import com.github.david32768.jynxfree.jvm.JvmVersionRange;
@@ -359,7 +360,7 @@ public enum JvmOp implements JynxOp {
     }
     
     public Opcode getOpcode() {
-        return Opcode.valueOf(externalName.toUpperCase());
+        return Opcodes.of(this.opcode);
     }
     
     public int opcode() {
@@ -451,7 +452,7 @@ public enum JvmOp implements JynxOp {
 
     public static JvmOp getOp(int code) {
         JvmOp result = code >= 0 && code < CODEMAP.length?CODEMAP[code]:null;
-        Objects.nonNull(result);
+        assert Objects.nonNull(result);
         return result;
     }
 
@@ -460,7 +461,7 @@ public enum JvmOp implements JynxOp {
     }
     
     public static JvmOp of(Opcode op) {
-        return getOp(op.name().toLowerCase());
+        return getOp(op.bytecode());
     }
     
     private JvmOp getSuffixedOp(Object suffix) {

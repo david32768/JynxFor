@@ -18,16 +18,18 @@ import static com.github.david32768.jynxfor.my.Message.M990;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 
+import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.instruction.LineInstruction;
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
 
-import asm.instruction.Instruction;
-import asm.instruction.LineInstruction;
-
 public class InstList {
 
-    private final List<Instruction> instructions;
+    private final List<JynxInstruction> instructions;
     private final StackLocals stackLocals;
     private final Line line;
     private final String spacer;
@@ -97,7 +99,7 @@ public class InstList {
         }
     }
 
-    private void addInsn(Instruction insn) {
+    private void addInsn(JynxInstruction insn) {
         if (expand) {
             LOG(M292,spacer,insn); // "%s  +%s"
         }
@@ -110,7 +112,7 @@ public class InstList {
         }
     }
 
-    public void add(Instruction insn) {
+    public void add(JynxInstruction insn) {
         if (addLineNumber && insn.needLineNumber()) {
             int lnum = line.getLinect();
             addInsn(new LineInstruction(lnum));    
@@ -120,7 +122,7 @@ public class InstList {
     }
 
     public void accept(MethodNode mnode) {
-        for (Instruction in:instructions) {
+        for (JynxInstruction in:instructions) {
             in.accept(mnode);
         }
         if (!expand) {

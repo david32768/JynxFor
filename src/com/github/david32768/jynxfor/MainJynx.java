@@ -11,18 +11,22 @@ import static com.github.david32768.jynxfor.my.JynxGlobal.CLASS_NAME;
 import static com.github.david32768.jynxfor.my.Message.M116;
 import static com.github.david32768.jynxfor.my.Message.M218;
 import static com.github.david32768.jynxfor.my.Message.M222;
+import static com.github.david32768.jynxfor.my.Message.M651;
 import static com.github.david32768.jynxfor.my.Message.M97;
+
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.SYSIN;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.VALIDATE_ONLY;
-import com.github.david32768.jynxfree.jynx.MainConstants;
 
+import com.github.david32768.jynxfor.scan.JynxScanner;
+
+import com.github.david32768.jynxfree.jynx.MainConstants;
 import com.github.david32768.jynxfree.jynx.MainOption;
 import com.github.david32768.jynxfree.jynx.MainOptionService;
+import com.github.david32768.jynxfree.utility.FileIO;
 
 import jynx2asm.JynxClass;
-import jynx2asm.JynxScanner;
 
 public class MainJynx implements MainOptionService {
 
@@ -33,36 +37,58 @@ public class MainJynx implements MainOptionService {
 
     @Override
     public boolean call(PrintWriter pw) {
-        return call(Optional.empty());
+        if (!OPTION(SYSIN)) {
+            LOG(M222,SYSIN); // "either option %s is specified or file name is present but not both"
+            return false;
+        }
+        return call(Optional.empty(), Optional.empty());
     }
 
     @Override
     public boolean call(PrintWriter pw, String arg) {
-        return call(Optional.of(arg));
+        if (OPTION(SYSIN)) {
+            return call(Optional.empty(), Optional.of(arg));
+        } else {
+            return call(Optional.of(arg), Optional.empty());
+        }
     }
 
-    public boolean call(Optional<String> optfname) {
-        if (optfname.isPresent() == OPTION(SYSIN)) {
+    @Override
+    public boolean call(PrintWriter pw, String fname, String dirname) {
+        if (OPTION(SYSIN)) {
             LOG(M222,SYSIN); // "either option %s is specified or file name is present but not both"
             return false;
         }
+        return call(Optional.of(fname), Optional.of(dirname));
+    }
+
+    private boolean call(Optional<String> optfname, Optional<String> optdirname) {
+        String fname = optfname.orElse("SYSIN");
         if (optfname.isEmpty()) {
             LOG(M218); //"SYSIN will be used as input"
+        } else if (!fname.endsWith(MainConstants.JX_SUFFIX)) {
+            LOG(M97, fname, MainConstants.JX_SUFFIX); // "file(%s) does not have %s suffix"
+            return false;
         }
-        String fname = optfname.orElse("SYSIN");
         try {
+            Optional<Path> optdirpath = optdirname.map(Path::of);
+            if (optdirpath.isPresent() && !Files.isDirectory(optdirpath.get())) {
+                // "%s is not a directory"
+                LOG(M651, optdirname.get());
+                return false;
+            }
             JynxScanner scanner;
             if (optfname.isPresent()) {
-                if (!fname.endsWith(MainConstants.JX_SUFFIX)) {
-                    LOG(M97, fname, MainConstants.JX_SUFFIX); // "file(%s) does not have %s suffix"
-                    return false;
-                }
                 Path pathj = Paths.get(fname);
                 scanner = JynxScanner.getInstance(pathj);
             } else {
                 scanner = JynxScanner.getInstance(System.in);
             }
-            return assemble(fname, scanner);
+            byte[] ba = JynxClass.getBytes(fname,scanner);
+            if (ba == null) {
+                return false;
+            }
+            return writeOut(fname, ba, optdirpath);
         } catch (IOException ex) {
             LOG(ex);
             return false;
@@ -74,15 +100,14 @@ public class MainJynx implements MainOptionService {
         return JynxClass.getBytes(classname, null, JynxScanner.getInstance(code));
     }
     
-    private static boolean assemble(String fname, JynxScanner scanner) throws IOException {
-        byte[] ba = JynxClass.getBytes(fname,scanner);
-        if (ba == null) {
-            return false;
-        }
+    private static boolean writeOut(String fname, byte[] bytes, Optional<Path> optdirpath) throws IOException {
         if (OPTION(VALIDATE_ONLY)) {
             return true;
         }
         String cname = CLASS_NAME();
+        if (optdirpath.isPresent()) {
+            return FileIO.write(optdirpath.get(), cname, bytes);
+        }
         int index = cname.lastIndexOf('/');
         String cfname = cname.substring(index + 1);
         cfname += ".class";
@@ -93,8 +118,9 @@ public class MainJynx implements MainOptionService {
                 pathc = parent.resolve(pathc);
             }
         }
-        Files.write(pathc, ba);
-        LOG(M116,pathc,ba.length); // "%s created - size %d bytes"
+        Files.write(pathc, bytes);
+         // "%s created - size %d bytes"
+        LOG(M116, pathc, bytes.length);
         return true;
     }
     

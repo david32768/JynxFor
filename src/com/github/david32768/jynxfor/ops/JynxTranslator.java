@@ -10,9 +10,9 @@ import static com.github.david32768.jynxfor.my.Message.M325;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
-import com.github.david32768.jynxfree.jynx.NameDesc;
+import com.github.david32768.jynxfor.scan.ConstType;
 
-import jynx2asm.ConstType;
+import com.github.david32768.jynxfree.jynx.NameDesc;
 
 public class JynxTranslator {
 

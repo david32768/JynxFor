@@ -20,11 +20,9 @@ public class ASMClassNode extends JynxClassNode {
     }
     
     public static ASMClassNode getInstance(Access accessname, boolean usestack, Resolver resolver) {
-        int cwflags;
-        if (accessname.jvmVersion().supports(StackMapTable)) {
-            cwflags = usestack? 0: ClassWriter.COMPUTE_FRAMES;
-        } else {
-            cwflags = usestack? 0: ClassWriter.COMPUTE_MAXS;
+        int cwflags = 0;
+        if (!usestack && accessname.jvmVersion().supports(StackMapTable)) {
+            cwflags = ClassWriter.COMPUTE_FRAMES;
         }
         JynxClassWriter cw = new JynxClassWriter(cwflags, resolver);
         return new ASMClassNode(accessname, cw);

@@ -1,10 +1,11 @@
 package com.github.david32768.jynxfor.ops;
 
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jynx.NameDesc;
 
 import jynx2asm.LabelStack;
-import jynx2asm.Line;
-import jynx2asm.Token;
 
 public enum LineOps implements LineOp {
 

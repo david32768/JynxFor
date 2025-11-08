@@ -20,10 +20,11 @@ import org.objectweb.asm.util.TraceClassVisitor;
 import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.ClassType.RECORD;
+import static com.github.david32768.jynxfree.jynx.ClassType.VALUE_RECORD;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.TRACE;
 
+import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.verify.Resolver;
-import com.github.david32768.jynxfor.verify.Verifier;
 import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jynx.Access;
 import com.github.david32768.jynxfree.jynx.ClassType;
@@ -31,7 +32,6 @@ import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 
 import jynx2asm.ClassChecker;
-import jynx2asm.Line;
 import jynx2asm.ObjectLine;
 
 public abstract class JynxClassNode {
@@ -49,7 +49,7 @@ public abstract class JynxClassNode {
             TraceClassVisitor tcv = new TraceClassVisitor(basecv, printer, pw);
             this.cv = new CheckClassAdapter(tcv, false);
         } else {
-            this.cv = OPTION(GlobalOption.VALHALLA) && SUPPORTS(Feature.value)?
+            this.cv = SUPPORTS(Feature.value)?
                     basecv:
                     new CheckClassAdapter(basecv, false);
         }
@@ -82,7 +82,7 @@ public abstract class JynxClassNode {
     
     public JynxComponentNode getJynxComponentNode(Line line) {
         ClassType classtype = accessName.classType();
-        if (classtype != RECORD) {
+        if (classtype != RECORD && classtype != VALUE_RECORD) {
             LOG(M41);    // "component can only appear in a record"
         }
         JynxComponentNode jcn = JynxComponentNode.getInstance(line);

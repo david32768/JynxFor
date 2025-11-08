@@ -38,7 +38,6 @@ public enum Message implements JynxMessage {
     M78(ERROR,"%s has different signature %s to component %s"),
     M79(ERROR,"Trying to read beyond end of file"),
     M86(ERROR,"invalid op - %s"),
-    M88(INFO,"options = %s"),
     M89(INFO,"file = %s version = %s"),
     M90(ERROR,"unused tokens - starting at %s"),
     M93(STYLE,"class name (%s) does not start with uppercase letter"),
@@ -225,14 +224,14 @@ public enum Message implements JynxMessage {
     M338(ERROR,"code missing but method is not native or abstract"),
     M339(ERROR,"maximum code size of %d exceeded; current size = [%d,%d]"),
     M340(ERROR,"range of cases [%d, %d] is too big for %s, so %s substituted"),
-    M341("invalid return type %s"),
+    M341(ERROR,"invalid return type %s"),
     M362(ERROR,"expected arg %s but was %s"),
     M370(ERROR,"Type annotations not allowed for Module"),
     M394(ERROR,"END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"),
     M400(ENDINFO,"unable to find %s %s because of %s"),
     M402(ERROR,"cannot insert end_token"),
     M403(WARNING,"duplicate %s hint for %s"),
-    M404("different %s hint for %s: %s and %s"),
+    M404(ERROR,"different %s hint for %s: %s and %s"),
     M405(ERROR,"%s has different type %s from previous %s at line %d"),
     M406(ERROR,"method %s in %s class must be %s, not %s and have no parameters"),
     M407(ENDINFO,"%s %s is deprecated"),
@@ -241,13 +240,15 @@ public enum Message implements JynxMessage {
     M410(ERROR,"cannot amend quoted token"),
     M411(ERROR,"type %s not found"),
     M412(ERROR,"%s not supported"),
-    M413("Verification: %s"),
-    M617("circular hint: %s extends %s"),    
-    M622("hints file does not have %s suffix"),
-    M623("first directive in hints file is not %s"),
+    M413(ERROR,"Verification: %s"),
+    M617(ERROR,"circular hint: %s extends %s"),    
+    M622(ERROR,"hints file does not have %s suffix"),
+    M623(ERROR,"first directive in hints file is not %s"),
     M624(INFO,"ASM Simple Verifier used"),
-    M626("key %d is not in range [%d,%d]"),
+    M626(ERROR,"key %d is not in range [%d,%d]"),
     M649(INFO,"ASM Simple Verifier used to try and clarify error reported by ClassFile.verify"),
+    M651(ERROR,"%s is not a directory"),
+    M655(WARNING,"known attribute %s not supported"),
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),
     M802(FINER,"at label %s: min length = %d max length = %d -> %d (adjusted = -%d)"),
@@ -269,12 +270,7 @@ public enum Message implements JynxMessage {
         this.format = logtype.prefix(name()) + format;
         this.msg = format;
     }
-    
-    
-    private Message(String format) {
-        this(ERROR,format);
-    }
-
+        
     @Override
     public String format(Object... objs) {
         return String.format(format,objs);

@@ -1,5 +1,7 @@
 package jynx2asm;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 public class ObjectLine<T> {
     
     private final T object;

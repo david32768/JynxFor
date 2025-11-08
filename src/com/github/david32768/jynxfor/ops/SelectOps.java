@@ -10,13 +10,14 @@ import static com.github.david32768.jynxfor.ops.JvmOp.*;
 import static com.github.david32768.jynxfor.my.Message.M278;
 import static com.github.david32768.jynxfor.my.Message.M282;
 
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jvm.NumType;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 
 import jynx2asm.FrameElement;
 import jynx2asm.InstList;
-import jynx2asm.Line;
-import jynx2asm.Token;
 
 public enum SelectOps implements SelectOp {
     

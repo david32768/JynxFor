@@ -1,7 +1,8 @@
 package com.github.david32768.jynxfor.ops;
 
+import com.github.david32768.jynxfor.scan.Line;
+
 import jynx2asm.InstList;
-import jynx2asm.Line;
 
 public interface SelectOp extends JynxOp {
 

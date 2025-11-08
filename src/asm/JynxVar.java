@@ -15,13 +15,14 @@ import static com.github.david32768.jynxfree.jynx.ReservedWord.res_is;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.res_signature;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.res_to;
 
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jynx.Global;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 
 import jynx2asm.JynxLabel;
 import jynx2asm.JynxLabelMap;
-import jynx2asm.Line;
-import jynx2asm.Token;
 
 public class JynxVar {
     

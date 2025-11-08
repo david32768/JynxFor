@@ -11,6 +11,10 @@ import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.NameDesc.*;
 
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfor.scan.TokenArray;
+
 import com.github.david32768.jynxfree.jvm.AccessFlag;
 import com.github.david32768.jynxfree.jvm.Constants;
 import com.github.david32768.jynxfree.jvm.Context;
@@ -24,9 +28,7 @@ import com.github.david32768.jynxfree.jynx.LogAssertionError;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
-import jynx2asm.Line;
-import jynx2asm.Token;
-import jynx2asm.TokenArray;
+
 import jynx2asm.UniqueDirectiveChecker;
 
 public class JynxModule {

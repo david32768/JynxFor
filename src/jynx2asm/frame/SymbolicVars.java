@@ -15,6 +15,8 @@ import static com.github.david32768.jynxfor.my.Message.M230;
 import static com.github.david32768.jynxfor.my.Message.M337;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 import com.github.david32768.jynxfree.jynx.NameDesc;
@@ -22,7 +24,6 @@ import com.github.david32768.jynxfree.jynx.NameDesc;
 import asm.JynxVar;
 import jynx2asm.FrameElement;
 import jynx2asm.JynxLabel;
-import jynx2asm.Token;
 
 public class SymbolicVars extends LocalVars {
 

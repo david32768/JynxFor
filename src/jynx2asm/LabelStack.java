@@ -7,6 +7,8 @@ import static com.github.david32768.jynxfor.my.Message.M248;
 import static com.github.david32768.jynxfor.my.Message.M264;
 import static com.github.david32768.jynxfor.my.Message.M265;
 
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 import com.github.david32768.jynxfree.jynx.LogIllegalStateException;
 

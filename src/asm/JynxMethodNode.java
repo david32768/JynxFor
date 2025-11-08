@@ -17,6 +17,9 @@ import static com.github.david32768.jynxfree.jvm.StandardAttribute.RuntimeVisibl
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.Signature;
 
 import com.github.david32768.jynxfor.ops.JynxOps;
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.TokenArray;
 
 import com.github.david32768.jynxfree.jvm.AccessFlag;
 import com.github.david32768.jynxfree.jvm.Context;

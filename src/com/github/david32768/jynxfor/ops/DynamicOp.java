@@ -1,14 +1,15 @@
 package com.github.david32768.jynxfor.ops;
 
+import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.scan.Line;
+
 import com.github.david32768.jynxfree.jvm.Feature;
 
-import asm.instruction.Instruction;
 import jynx2asm.ClassChecker;
-import jynx2asm.Line;
 
 public interface DynamicOp extends JynxOp {
     
-    public Instruction getInstruction(Line line, ClassChecker checker);
+    public JynxInstruction getInstruction(Line line, ClassChecker checker);
 
     public default Feature feature(){
         return Feature.invokeDynamic;

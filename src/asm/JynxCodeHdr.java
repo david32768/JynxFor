@@ -22,6 +22,11 @@ import static com.github.david32768.jynxfree.jvm.StandardAttribute.Code;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.StackMapTable;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.LinesIterator;
+import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfor.scan.TokenArray;
 
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jvm.FrameType;

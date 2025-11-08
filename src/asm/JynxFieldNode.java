@@ -14,16 +14,17 @@ import static com.github.david32768.jynxfree.jvm.AccessFlag.acc_final;
 import static com.github.david32768.jynxfree.jvm.AccessFlag.acc_static;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.ConstantValue;
 
+import com.github.david32768.jynxfor.scan.ConstType;
+import com.github.david32768.jynxfor.scan.JynxScanner;
+import com.github.david32768.jynxfor.scan.Line;
+import com.github.david32768.jynxfor.scan.Token;
+
 import com.github.david32768.jynxfree.jvm.AccessFlag;
 import com.github.david32768.jynxfree.jvm.Context;
 import com.github.david32768.jynxfree.jynx.Access;
 import com.github.david32768.jynxfree.jynx.Directive;
 
 import jynx2asm.ClassChecker;
-import jynx2asm.ConstType;
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
-import jynx2asm.Token;
 import jynx2asm.UniqueDirectiveChecker;
 
 public class JynxFieldNode implements ContextDependent, HasAccessFlags {
