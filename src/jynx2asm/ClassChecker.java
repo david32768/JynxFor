@@ -394,7 +394,7 @@ public class ClassChecker {
             .filter(ol->ol.line() != Line.EMPTY)
             .count();
         if (!init && (instanceFieldCt != 0 || instanceMethodCoumt != 0)) {
-            LOG(M156,NameDesc.CLASS_INIT_NAME); // "instance variables or methods with no %s method"
+            LOG(M156,NameDesc.INIT_NAME); // "instance variables or methods with no %s method"
         }
         boolean equals = ownMethods.keySet().stream()
             .filter(ond -> ond.equals(EQUALS_METHOD))

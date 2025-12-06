@@ -219,12 +219,15 @@ public enum Message implements JynxMessage {
     M328(WARNING,"%s nest level is already zero"),
     M329(INFO,"print options = %s"),
     M330(ERROR,"maximum code size of %d exceeded; method size = [%d,%d]"),
-    M335(ERROR,"index (%d) is not a current try index [0,%d]"),
+    M335(ERROR,"%d is not a current valid try index: current valid range is [0,%d]"),
     M337(ERROR,"%s is predefined"),
     M338(ERROR,"code missing but method is not native or abstract"),
     M339(ERROR,"maximum code size of %d exceeded; current size = [%d,%d]"),
     M340(ERROR,"range of cases [%d, %d] is too big for %s, so %s substituted"),
     M341(ERROR,"invalid return type %s"),
+    M345(ERROR,"no instruction preceding instruction annotation"),
+    M346(ERROR,"stack frame does not follow a label"),
+    M347(ERROR,"method has no instructions"),
     M362(ERROR,"expected arg %s but was %s"),
     M370(ERROR,"Type annotations not allowed for Module"),
     M394(ERROR,"END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"),
@@ -267,6 +270,7 @@ public enum Message implements JynxMessage {
 
     private Message(LogMsgType logtype, String format) {
         this.logtype = logtype;
+        assert name().matches("M[1-9][0-9]*");
         this.format = logtype.prefix(name()) + format;
         this.msg = format;
     }
@@ -286,4 +290,20 @@ public enum Message implements JynxMessage {
         return logtype;
     }
     
+    static {
+        assert ascending();
+    }
+    
+    private static boolean ascending() {
+        int last = Integer.MIN_VALUE;
+        for (var msg : values()) {
+            int num = Integer.parseInt(msg.name().substring(1));
+            if (num <= last) {
+                assert false:msg.name();
+                return false;
+            }
+            last = num;
+        }
+        return true;
+    }
 }

@@ -22,10 +22,10 @@ import static com.github.david32768.jynxfree.jynx.NameDesc.METHOD_NAME;
 import static com.github.david32768.jynxfree.jynx.NameDesc.METHOD_NAME_DESC;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
-import com.github.david32768.jynxfree.jvm.Constants;
 import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jvm.HandleType;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
+import com.github.david32768.jynxfree.jynx.NameDesc;
 
 import static jynx2asm.handles.HandlePart.DESC;
 import static jynx2asm.handles.HandlePart.INTERFACE;
@@ -165,7 +165,7 @@ public class MethodHandle implements JynxHandle, Comparable<MethodHandle> {
     }
     
     private static boolean isStaticInit(String name,String desc) {
-        return desc.charAt(0) == '(' && Constants.STATIC_INIT.equalsString(name+desc);
+        return NameDesc.STATIC_INIT_NAME_DESC.isValid(name + desc);
     }
     
     private static final char ARRAY_MARKER = '[';

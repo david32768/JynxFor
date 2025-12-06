@@ -10,10 +10,10 @@ import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.NameDesc.PACKAGE_NAME;
 
 import com.github.david32768.jynxfor.my.JynxGlobal;
-import com.github.david32768.jynxfree.jvm.Constants;
 import com.github.david32768.jynxfree.jvm.HandleType;
 import com.github.david32768.jynxfree.jynx.Global;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
+import com.github.david32768.jynxfree.jynx.NameDesc;
 
 public enum HandlePart {
 
@@ -110,10 +110,8 @@ public enum HandlePart {
         return packageNameOf(class1).equals(packageNameOf(class2));
     }
     
-    private static final String VOID_METHOD = ")V";
-
-    public static boolean isInit(String name,String desc) {
-        return Constants.CLASS_INIT_NAME.equalsString(name) && desc.endsWith(VOID_METHOD);
+    public static boolean isInit(String name, String desc) {
+        return NameDesc.INIT_NAME_DESC.isValid(name + desc);
     }
     
     public static String ownerName(String owner, String name) {

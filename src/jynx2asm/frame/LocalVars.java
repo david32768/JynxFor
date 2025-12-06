@@ -8,12 +8,12 @@ import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 
+import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 
-import asm.JynxVar;
 import jynx2asm.FrameElement;
 import jynx2asm.JynxLabel;
 import jynx2asm.LimitValue;
@@ -39,10 +39,10 @@ public class LocalVars {
         varAccess.completeInit(this.parmsz);
     }
 
-    public static LocalVars getInstance(MethodParameters parameters) {
+    public static LocalVars getInstance(MethodParameters parameters, JynxCodeNodeBuilder codeBuilder) {
         boolean symbolic = OPTION(GlobalOption.SYMBOLIC_LOCAL);
         if(symbolic) {
-            return SymbolicVars.getInstance(parameters);
+            return SymbolicVars.getInstance(parameters, codeBuilder);
         }
         return new LocalVars(parameters);
     }
@@ -88,8 +88,9 @@ public class LocalVars {
         if (!fe.matchLocal(required)) {
             LOG(M190,num,required,fe); // "mismatched local %d: required %s but found %s"
             if (fe == FrameElement.UNUSED) {
-                store(num,required);
+                store(num,required); // to stop chained errors
             }
+            fe = required; // to stop chained errors
         }
         localsz.adjust(locals.size());
         return fe;
@@ -241,6 +242,4 @@ public class LocalVars {
         return  stringForm();
     }
     
-    public void addSymbolicVars(List<JynxVar> jvars) {
-    }
 }

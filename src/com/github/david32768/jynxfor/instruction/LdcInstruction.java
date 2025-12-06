@@ -3,25 +3,22 @@ package com.github.david32768.jynxfor.instruction;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
-
 import com.github.david32768.jynxfor.scan.ConstType;
-import jynx2asm.StackLocals;
+import com.github.david32768.jynxfor.scan.Line;
 
-public class LdcInstruction implements JynxInstruction {
+public class LdcInstruction extends AbstractInstruction {
 
-    private final JvmOp jvmop;    
     private final Object cst;
     private final ConstType ct;
 
-    public LdcInstruction(JvmOp jop,  Object cst, ConstType ct) {
-        this.jvmop = jop;
+    public LdcInstruction(JvmOp jvmop,  Object cst, ConstType ct, Line line) {
+        super(jvmop, line);
         this.cst = cst;
         this.ct = ct;
     }
 
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
+    public ConstType constType() {
+        return ct;
     }
     
     @Override
@@ -35,11 +32,6 @@ public class LdcInstruction implements JynxInstruction {
     @Override
     public void accept(MethodVisitor mv) {
         mv.visitLdcInsn(cst);
-    }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustStackOperand("()" + ct.getDesc());
     }
 
     @Override

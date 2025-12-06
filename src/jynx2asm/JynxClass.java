@@ -15,6 +15,7 @@ import static com.github.david32768.jynxfree.jynx.Directive.end_comment;
 import static com.github.david32768.jynxfree.jynx.NameDesc.CLASS_NAME;
 
 import com.github.david32768.jynxfor.my.JynxGlobal;
+import com.github.david32768.jynxfor.node.JynxCodeNode;
 import com.github.david32768.jynxfor.ops.JynxOps;
 import com.github.david32768.jynxfor.ops.JynxTranslator;
 import com.github.david32768.jynxfor.scan.JynxScanner;
@@ -348,7 +349,6 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
                 js.skipTokens();
                 return;
             }
-            jcodehdr.visitCode();
             sd = jcodehdr;
         }
         if (dir == null) {
@@ -363,6 +363,7 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
             LOG(M270, Directive.end_method); // "%s directive missing but assumed"
         }
         boolean ok;
+        JynxCodeNode codenode = null;
         if (jmethodnode.isAbstractOrNative()) {
             ok = true;
         } else {
@@ -370,11 +371,12 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
                 LOG(M46,jmethodnode.getName()); // "method %s has no body"
                 ok = false;
             } else {
-                ok = jcodehdr.visitEnd();
+                codenode = jcodehdr.visitEnd();
+                ok = codenode != null;
             }
         }
         if (ok) {
-            jclassnode.acceptMethod(jmethodnode);
+            jclassnode.acceptMethod(jmethodnode, codenode);
         }
         jmethodnode = null;
         jcodehdr = null;

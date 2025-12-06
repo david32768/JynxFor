@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
-import org.objectweb.asm.tree.MethodNode;
-
 import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
 
 import static com.github.david32768.jynxfor.my.Message.M290;
@@ -20,6 +18,8 @@ import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 
 import com.github.david32768.jynxfor.instruction.JynxInstruction;
 import com.github.david32768.jynxfor.instruction.LineInstruction;
+import com.github.david32768.jynxfor.instruction.OpcodeInstruction;
+import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.ops.JvmOp;
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.scan.Token;
@@ -99,7 +99,24 @@ public class InstList {
         }
     }
 
+    public void add(JynxInstruction insn) {
+        if (addLineNumber && insn.jvmop().canThrow()) {
+            int lnum = line.getLinect();
+            addInsn(new LineInstruction(lnum, line));    
+            addLineNumber = false;
+        }
+        addInsn(insn);
+    }
+
     private void addInsn(JynxInstruction insn) {
+        if (false && stackLocals.addNop(insn)) {
+            var nop = OpcodeInstruction.getInstance(JvmOp.asm_nop, line);
+            addInsnX(nop);
+        }
+        addInsnX(insn);
+    }
+    
+    private void addInsnX(JynxInstruction insn) {
         if (expand) {
             LOG(M292,spacer,insn); // "%s  +%s"
         }
@@ -112,19 +129,8 @@ public class InstList {
         }
     }
 
-    public void add(JynxInstruction insn) {
-        if (addLineNumber && insn.needLineNumber()) {
-            int lnum = line.getLinect();
-            addInsn(new LineInstruction(lnum));    
-            addLineNumber = false;
-        }
-        addInsn(insn);
-    }
-
-    public void accept(MethodNode mnode) {
-        for (JynxInstruction in:instructions) {
-            in.accept(mnode);
-        }
+    public void accept(JynxCodeNodeBuilder codenode) {
+        codenode.addInstructionList(instructions);
         if (!expand) {
             printStackLocals();
         }

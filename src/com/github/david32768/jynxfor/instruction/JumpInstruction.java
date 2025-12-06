@@ -3,28 +3,26 @@ package com.github.david32768.jynxfor.instruction;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 
 import jynx2asm.JynxLabel;
-import jynx2asm.StackLocals;
 
-public class JumpInstruction implements JynxInstruction {
+public class JumpInstruction extends AbstractInstruction {
 
-    private final JvmOp jvmop;    
     private final JynxLabel jlab;
     
     private boolean isDefinitelyNotWide;
     private boolean isDefinitelyWide;
 
-    public JumpInstruction(JvmOp jop, JynxLabel jlab) {
-        this.jvmop = jop;
+    public JumpInstruction(JvmOp jvmop, JynxLabel jlab, Line line) {
+        super(jvmop, line);
         this.jlab = jlab;
         this.isDefinitelyNotWide = false;
         this.isDefinitelyWide = false;
     }
 
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
+    public JynxLabel jynxlab() {
+        return jlab;
     }
     
     @Override
@@ -33,12 +31,6 @@ public class JumpInstruction implements JynxInstruction {
         this.isDefinitelyWide = jlab.isDefinitelyWide(minoffset, maxoffset);
         
         jlab.usedAt(minoffset, maxoffset, maxLength() - minLength());
-    }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustStack(jvmop);        
-        stackLocals.adjustLabelJump(jlab, jvmop);
     }
 
     private int wideLength() {

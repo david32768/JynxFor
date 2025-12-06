@@ -6,21 +6,25 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LocalVariableAnnotationNode;
+import org.objectweb.asm.tree.TypeAnnotationNode;
 import org.objectweb.asm.TypePath;
 
 import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.*;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
-
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.Code;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.StackMapTable;
 
+import com.github.david32768.jynxfor.node.JynxCatchNode;
+import com.github.david32768.jynxfor.node.JynxCodeNode;
+import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.ops.JvmOp;
 import com.github.david32768.jynxfor.scan.JynxScanner;
 import com.github.david32768.jynxfor.scan.Line;
@@ -42,46 +46,39 @@ import jynx2asm.frame.MethodParameters;
 public class JynxCodeHdr implements ContextDependent {
 
     private final JynxScanner js;
-    private List<Object> localStack;
     private final int errorsAtStart;
-
     private final StackLocals stackLocals;
-
     private final EnumMap<ReservedWord,Integer> options;
-    private int printFlag = 0;
-    
-    private int tryct = 0;
     private final JynxLabelMap labelmap;
-    private final List<JynxVar> vars;
-    
-    private final MethodNode mnode;
-
     private final String2Insn s2a;
+    private final UniqueDirectiveChecker unique_checker;
+    private final JynxCodeNodeBuilder codeBuilder;
+
+    private List<Object> localStack;
+    private int printFlag = 0;
     private int endif = 0;
     
-    private final UniqueDirectiveChecker unique_checker;
     
-    private JynxCodeHdr(JynxScanner js, MethodNode mnode, StackLocals stackLocals,
-            List<Object> localStack, String2Insn s2a) {
+    private JynxCodeHdr(JynxScanner js, StackLocals stackLocals,
+            List<Object> localStack, String2Insn s2a, JynxCodeNodeBuilder codeBuilder) {
         
         this.js = js;
         this.errorsAtStart = LOGGER().numErrors();
-        this.localStack = localStack;
-        this.mnode = mnode;
-        this.vars = new ArrayList<>();
         this.stackLocals = stackLocals;
         this.s2a = s2a;
         this.labelmap = s2a.getLabelMap();
         this.unique_checker = new UniqueDirectiveChecker();
         this.options = new EnumMap<>(ReservedWord.class);
+        this.codeBuilder = codeBuilder;
+        this.localStack = localStack;
     }
 
-    public static JynxCodeHdr getInstance(JynxScanner js, MethodNode mnode,
-            MethodParameters parameters, String2Insn s2a) {
+    public static JynxCodeHdr getInstance(JynxScanner js, MethodParameters parameters, String2Insn s2a) {
         
         CHECK_SUPPORTS(Code);
-        StackLocals stackLocals = StackLocals.getInstance(parameters, s2a.getLabelMap());
-        return new JynxCodeHdr(js, mnode, stackLocals, parameters.getInitFrame(), s2a);
+        var codeBuilder = new JynxCodeNodeBuilder();
+        StackLocals stackLocals = StackLocals.getInstance(parameters, s2a.getLabelMap(), codeBuilder);
+        return new JynxCodeHdr(js, stackLocals, parameters.getInitFrame(), s2a, codeBuilder);
     }
 
     @Override
@@ -118,19 +115,13 @@ public class JynxCodeHdr implements ContextDependent {
         String toname = line.after(res_to);
         String usingname = line.after(res_using);
         line.noMoreTokens();
-        JynxCatch jcatch =  labelmap.getCatch(fromname, toname, usingname, exception, line);
+        JynxCatchNode jcatch =  labelmap.getCatch(fromname, toname, usingname, exception, line);
         if (jcatch != null) {
             stackLocals.visitTryCatchBlock(jcatch);
-            jcatch.accept(mnode);
+            codeBuilder.addCatch(jcatch);
         }
-        ++tryct;
     }
 
-    public void visitCode() {
-        mnode.visitCode();
-        labelmap.start(mnode, js.getLine());
-    }
-    
     private static final EnumSet<ReservedWord> PRINT_OPTIONS = EnumSet.of(res_expand,res_stack,res_locals,res_offset);
 
     private void setPrint(Line line) {
@@ -195,13 +186,13 @@ public class JynxCodeHdr implements ContextDependent {
     private void visitInsn(Line line) {
         InstList instlist = new InstList(stackLocals,line,options);
         s2a.getInsts(instlist);
-        instlist.accept(mnode);
+        instlist.accept(codeBuilder);
     }
     
     private void visitLineNumber(Line line) {
         InstList instlist = new InstList(stackLocals,line,options);
         s2a.add(JvmOp.xxx_line, instlist);
-        instlist.accept(mnode);
+        instlist.accept(codeBuilder);
     }
 
     private Object getAsmFrameType(FrameType ft,Line line) {
@@ -265,7 +256,7 @@ public class JynxCodeHdr implements ContextDependent {
         if (SUPPORTS(StackMapTable) && OPTION(USE_STACK_MAP) && !OPTION(SYMBOLIC_LOCAL)) {
             Object[] stackarr = frame_stack.toArray();
             Object[] localarr = frame_local.toArray();
-            mnode.visitFrame(Opcodes.F_NEW, localarr.length, localarr, stackarr.length, stackarr);
+            codeBuilder.addFrameToLabel(stackarr, localarr);
         }
         localStack = frame_local;
     }
@@ -286,8 +277,7 @@ public class JynxCodeHdr implements ContextDependent {
             LOG(M212,Directive.dir_var,SYMBOLIC_LOCAL);
             return;
         }
-        JynxVar jvar = JynxVar.getInstance(line, labelmap);
-        vars.add(jvar);
+        codeBuilder.addVar(line, labelmap);
     }
     
     private void undefinedLabel(JynxLabel lr) {
@@ -295,19 +285,15 @@ public class JynxCodeHdr implements ContextDependent {
                 .map(Line::toString)
                 .collect(Collectors.joining(System.lineSeparator()));
         LOG(M266,lr.name(),usage); // "Label %s not defined; used in%n%s"
-        mnode.visitLabel(lr.asmlabel());   // to prevent ASM error
     }
 
     private void unusedLabel(JynxLabel lr) {
         LOG(M272,lr.name(),lr.definedLine());    // "Label %s not used - defined in line:%n  %s"
     }
     
-    public boolean visitEnd() {
-        Line line = js.getLine();
+    public JynxCodeNode visitEnd() {
         s2a.visitEnd();
-        labelmap.end(mnode, line);
         stackLocals.visitEnd();
-        stackLocals.acceptVarDirectives(mnode, vars);
         labelmap.checkCatch();
         labelmap.stream()
                 .filter(lr->!lr.isDefined())
@@ -317,22 +303,21 @@ public class JynxCodeHdr implements ContextDependent {
                     .filter(lr->lr.isUnused())
                     .forEach(this::unusedLabel); 
         }
+        var codeNode = codeBuilder.build(stackLocals);
         boolean ok = LOGGER().numErrors() == errorsAtStart;
         if (ok) {
-            // must be called to generate stackmap etc.
-            mnode.visitMaxs(stackLocals.stack().max(), stackLocals.locals().max());
+            return codeNode;
         }
 
-        return ok;
+        return null;
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation
             (int typeref, TypePath typepath, String desc, boolean visible) {
         Line line = js.getLine();
-        AnnotationVisitor av;
         TypeRef tr = TypeRef.fromASM(typeref);
-        av = switch (tr) {
+        AnnotationVisitor av = switch (tr) {
             case trt_except -> visitTryCatchAnnotation(typeref, typepath, desc, visible);
             case tro_var, tro_resource -> visitLocalVariableAnnotation(line,typeref, typepath, desc, visible);
             default -> visitInsnAnnotation(tr, typeref, typepath, desc, visible);
@@ -340,25 +325,30 @@ public class JynxCodeHdr implements ContextDependent {
         line.noMoreTokens();
         return av;
     }
-
+            
     private AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
-        int index = TypeRef.getIndexFrom(typeref);
-        if (index < 0 || index >= tryct) {
-            // "index (%d) is not a current try index [0,%d]"
-            LOG(M335,index,tryct - 1);
-        }
-        return mnode.visitTryCatchAnnotation(typeref, tp, desc, visible);
+        TypeAnnotationNode av = new TypeAnnotationNode(typeref, tp, desc);
+        codeBuilder.addCatchAnnotation(av, visible);
+        return av;
     }
 
+    private AnnotationVisitor visitInsnAnnotation
+        (TypeRef tr, int typeref, TypePath tp, String desc, boolean visible) {
+            checkAnnotatedInst(tr, stackLocals.lastOp());
+            var av = new TypeAnnotationNode(typeref, tp, desc);
+            codeBuilder.addAnnotationToLastInstruction(av, visible);
+            return av;
+    }
+        
     private static void checkAnnotatedInst(TypeRef tr, JvmOp lastjop) {
-        EnumSet<JvmOp> lastjops = null;
-        switch (tr) {
-            case tro_cast -> lastjops = EnumSet.of(JvmOp.asm_checkcast);
-            case tro_instanceof -> lastjops = EnumSet.of(JvmOp.asm_instanceof);
-            case tro_new -> lastjops = EnumSet.of(JvmOp.asm_new);
-            case tro_argmethod -> lastjops = EnumSet.of(JvmOp.asm_invokeinterface, JvmOp.asm_invokestatic, JvmOp.asm_invokevirtual);
-            case tro_argnew -> lastjops = EnumSet.of(JvmOp.asm_invokespecial);
-        }
+        EnumSet<JvmOp> lastjops = switch (tr) {
+            case tro_cast -> EnumSet.of(JvmOp.asm_checkcast);
+            case tro_instanceof -> EnumSet.of(JvmOp.asm_instanceof);
+            case tro_new -> EnumSet.of(JvmOp.asm_new);
+            case tro_argmethod -> EnumSet.of(JvmOp.asm_invokeinterface, JvmOp.asm_invokestatic, JvmOp.asm_invokevirtual);
+            case tro_argnew -> EnumSet.of(JvmOp.asm_invokespecial);
+            default -> null;
+        };
         if (lastjops != null) {
             if (lastjop == null || !lastjops.contains(lastjop)) {
                 if (JVM_VERSION().compareTo(JvmVersion.V9) < 0) {
@@ -370,12 +360,6 @@ public class JynxCodeHdr implements ContextDependent {
         }
     }
     
-    private AnnotationVisitor visitInsnAnnotation
-        (TypeRef tr, int typeref, TypePath tp, String desc, boolean visible) {
-            checkAnnotatedInst(tr, stackLocals.lastOp());
-            return mnode.visitInsnAnnotation(typeref, tp, desc, visible);
-    }
-
     private AnnotationVisitor visitLocalVariableAnnotation
         (Line line,int typeref, TypePath tp, String desc, boolean visible) {
             ArrayList<Integer> indexlist = new ArrayList<>();
@@ -404,7 +388,15 @@ public class JynxCodeHdr implements ContextDependent {
                 start_arr[i] = startref.asmlabel();
                 end_arr[i] = endref.asmlabel();
             }
-            return mnode.visitLocalVariableAnnotation(typeref, tp, start_arr, end_arr, index_arr, desc, visible);
+            LabelNode[] start = Stream.of(start_arr)
+                    .map(LabelNode::new)
+                    .toArray(LabelNode[]::new);
+            LabelNode[] end = Stream.of(end_arr)
+                    .map(LabelNode::new)
+                    .toArray(LabelNode[]::new);
+            var av = new LocalVariableAnnotationNode(typeref, tp, start, end, index_arr, desc);
+            codeBuilder.addVarAnnotation(av, visible);
+            return av;
     }
 
 }

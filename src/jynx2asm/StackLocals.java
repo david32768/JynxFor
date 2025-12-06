@@ -1,13 +1,19 @@
 package jynx2asm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-
-import org.objectweb.asm.MethodVisitor;
+import java.util.Set;
 
 import static com.github.david32768.jynxfor.my.Message.*;
+
+import static com.github.david32768.jynxfor.ops.JvmOp.asm_getfield;
+import static com.github.david32768.jynxfor.ops.JvmOp.asm_getstatic;
+import static com.github.david32768.jynxfor.ops.JvmOp.asm_putfield;
+import static com.github.david32768.jynxfor.ops.JvmOp.asm_putstatic;
 
 import static com.github.david32768.jynxfree.jvm.Constants.MAX_CODE;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
@@ -15,18 +21,21 @@ import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 import static com.github.david32768.jynxfree.jynx.Global.SUPPORTS;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.WARN_UNNECESSARY_LABEL;
 
-import com.github.david32768.jynxfor.instruction.JynxInstruction;
-import com.github.david32768.jynxfor.instruction.LabelInstruction;
-import com.github.david32768.jynxfor.instruction.LineInstruction;
+import com.github.david32768.jynxfor.instruction.*;
+
+import com.github.david32768.jynxfor.node.JynxCatchNode;
+import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
+import com.github.david32768.jynxfor.node.JynxVarNode;
 import com.github.david32768.jynxfor.ops.JvmOp;
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jvm.Feature;
+import com.github.david32768.jynxfree.jvm.OpArg;
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.GlobalOption;
+import com.github.david32768.jynxfree.jynx.LogAssertionError;
 
-import asm.JynxVar;
 import jynx2asm.frame.LocalFrame;
 import jynx2asm.frame.LocalVars;
 import jynx2asm.frame.MethodParameters;
@@ -60,6 +69,7 @@ public class StackLocals {
     private final JynxLabelMap labelmap;
     private final JvmOp returnOp;
     private final List<JynxLabel> activeLabels;
+    private final Set<JynxCatchNode.LabelRecord> activeCatch;
 
     private boolean returns;
     private boolean hasThrow;
@@ -82,13 +92,15 @@ public class StackLocals {
         this.frameRequired = false;
         this.completion = Last.OP;
         this.activeLabels = new ArrayList<>();
+        this.activeCatch = new HashSet<>();
         this.minLength = 0;
         this.maxLength = 0;
     }
     
-    public static StackLocals getInstance(MethodParameters parameters, JynxLabelMap labelmap) {
+    public static StackLocals getInstance(MethodParameters parameters,
+            JynxLabelMap labelmap, JynxCodeNodeBuilder codeBuilder) {
         OperandStack os = OperandStack.getInstance();
-        LocalVars lv = LocalVars.getInstance(parameters);
+        LocalVars lv = LocalVars.getInstance(parameters, codeBuilder);
         return new StackLocals(lv, os, labelmap, parameters.getReturnOp());
     }
 
@@ -127,46 +139,25 @@ public class StackLocals {
         return lastgoto && !usedlab;
     }
     
-    public void visitTryCatchBlock(JynxCatch jcatch) {
+    public void visitTryCatchBlock(JynxCatchNode jcatch) {
         JynxLabel usingref = jcatch.usingLab();
         stack.checkCatch(usingref);
     }
     
-    public void adjustLabelDefine(JynxLabel target) {
-        int adjustmax = target.forwardBranchAdjustment();
-        if (adjustmax > 0) {
-            int oldmax = maxLength;
-            maxLength -= adjustmax;
-            // "at label %s: min length = %d max length = %d -> %d (adjusted = -%d)"
-            LOG(M802, target,minLength, oldmax, maxLength,adjustmax);
-            assert maxLength >= minLength;
+    @Deprecated
+    public boolean addNop(JynxInstruction inst) {
+        if (inst instanceof LabelInstruction labinst) {
+            var target = labinst.jynxlab();
+            return labelmap.isEndTry(target) && lastop != null
+                    && lastop.args() == OpArg.arg_var && lastop.isStoreVar();
         }
-        List<JynxCatch> catchlist = labelmap.getCatches(target);
-        if (!catchlist.isEmpty()) {
-            target.visitCatch(catchlist);
-        }
-        if (lastLab.isPresent()) { // new label is alias
-            JynxLabel base = lastLab.get();
-            if (OPTION(WARN_UNNECESSARY_LABEL)) {
-                LOG(M220,target.name(),base.name()); // "label %s is an alias for label %s"
-            }
-            labelmap.aliasJynxLabel(target.name(), target.definedLine(), base);
-            target.aliasOf(base);
-            locals.visitAlias(target, base,lastLab);
-            stack.visitAlias(target, base);
-        } else {
-            stack.visitLabel(target);
-            locals.visitLabel(target, lastLab);
-            lastLab = Optional.of(target);
-            activeLabels.add(target);
-            frameRequired = lastop.isUnconditional();
-            changeCompletionTo(Last.LABEL);
-        }
+        return false;
     }
 
-    private void visitLineNumber(Line line) {
+    private void visitLineNumber(LineInstruction lineinst, Line line) {
         if (lastLab.isPresent()) {
-            labelmap.weakUseOfJynxLabel(lastLab.get(), line);
+            JynxLabel linelabel = lastLab.get();
+            labelmap.weakUseOfJynxLabel(linelabel, line);
         }
         changeCompletionTo(Last.LINE);
     }
@@ -208,8 +199,8 @@ public class StackLocals {
         }
         in.resolve(minLength,maxLength);
         JvmOp jvmop = in.jvmop();
-        if (in instanceof LabelInstruction) {
-            in.adjust(this);
+        if (in instanceof LabelInstruction labinst) {
+            adjustLabelDefine(labinst.jynxlab());
             return true;
         }
         if (isUnreachable()) {
@@ -218,8 +209,8 @@ public class StackLocals {
             LOG(M121, drop, lastop);
             return false;
         }
-        if (in instanceof LineInstruction) {
-            visitLineNumber(line);
+        if (in instanceof LineInstruction lineinst) {
+            visitLineNumber(lineinst, line);
             return true;
         }
         assert jvmop.opcode() >= 0;
@@ -241,16 +232,106 @@ public class StackLocals {
         frameRequired = false; // to prevent multiple error messages
 
         visitPreJvmOp(jvmop);
-        in.adjust(this);
+        adjust(in);
         checkMethodLength(in);
         visitPostJvmOp(jvmop);
         changeCompletionTo(Last.OP);
         return true;
     }
 
+    private void adjust(JynxInstruction in) {
+        JvmOp jvmop = in.jvmop();
+        switch (in) {
+            case DynamicInstruction insn -> adjustStackOperand(insn.constantDynamic().getDescriptor());
+            case FieldInstruction insn -> adjustField(insn);
+            case IncrInstruction insn -> {
+                int varnum = adjustIncr(insn.varToken());
+                insn.setVarnum(varnum);
+            }
+            case JumpInstruction insn -> {
+                adjustStack(jvmop);        
+                adjustLabelJump(insn.jynxlab(), jvmop);
+            }
+            case LabelInstruction _ -> throw new AssertionError();
+            case LdcInstruction insn -> adjustStackOperand("()" + insn.constType().getDesc());
+            case LineInstruction _ -> throw new AssertionError();
+            case MarrayInstruction insn -> {
+                char[] parmarray = new char[insn.dims()];
+                Arrays.fill(parmarray, 'I');
+                String parms = String.valueOf(parmarray);
+                parms = "(" + parms + ")" + insn.type();
+                adjustStackOperand(parms);
+            }
+            case MethodInstruction insn -> adjustStackOperand(jvmop, insn.methodHandle());
+            case StackInstruction _ -> adjustStackOp(jvmop);
+            case SwitchInstruction insn -> {
+                adjustStack(jvmop);
+                adjustLabelSwitch(insn.dfltLabel(), insn.labels());
+            }
+            case VarInstruction insn -> {
+                int varnum = adjustLoadStore(jvmop, insn.varToken());
+                insn.setVarnum(varnum);
+            }
+            default -> adjustStack(jvmop);
+        }
+    }
+    
+    private void adjustLabelDefine(JynxLabel target) {
+        int adjustmax = target.forwardBranchAdjustment();
+        if (adjustmax > 0) {
+            int oldmax = maxLength;
+            maxLength -= adjustmax;
+            // "at label %s: min length = %d max length = %d -> %d (adjusted = -%d)"
+            LOG(M802, target,minLength, oldmax, maxLength,adjustmax);
+            assert maxLength >= minLength;
+        }
+        List<JynxCatchNode> catchlist = labelmap.getCatches(target);
+        if (!catchlist.isEmpty()) {
+            target.visitCatch(catchlist);
+        }
+        if (lastLab.isPresent()) { // new label is alias
+            JynxLabel base = lastLab.get();
+            if (OPTION(WARN_UNNECESSARY_LABEL)) {
+                LOG(M220,target.name(),base.name()); // "label %s is an alias for label %s"
+            }
+            labelmap.aliasJynxLabel(target.name(), target.definedLine(), base);
+            target.aliasOf(base);
+            locals.visitAlias(target, base,lastLab);
+            stack.visitAlias(target, base);
+        } else {
+            stack.visitLabel(target);
+            locals.visitLabel(target, lastLab);
+            lastLab = Optional.of(target);
+            activeLabels.add(target);
+            frameRequired = lastop.isUnconditional();
+            changeCompletionTo(Last.LABEL);
+        }
+        activeCatch.removeAll(labelmap.endTry(target));
+        activeCatch.addAll(labelmap.startTry(target));        
+    }
+    
+    private void adjustField(FieldInstruction inst) {
+        var fh = inst.fieldHandle();
+        String desc = fh.desc();
+        String stackdesc;
+        JvmOp jvmop = inst.jvmop();
+        switch (jvmop) {
+            case asm_getfield -> stackdesc = String.format("(L%s;)%s",fh.owner(),desc);
+            case asm_getstatic -> stackdesc = "()" + desc;
+            case asm_putfield -> stackdesc = String.format("(L%s;%s)V",fh.owner(),desc);
+            case asm_putstatic -> stackdesc = "(" + desc + ")V";
+            default -> // "unexpected Op %s in this instruction"),
+                throw new LogAssertionError(M908,jvmop.name());
+        }
+        adjustStackOperand(stackdesc);
+    }
+
     private void visitPreJvmOp(JvmOp asmop) {
         locals.preVisitJvmOp(lastLab);
         stack.preVisitJvmOp(lastLab);
+        if (lastLab.isPresent()) {
+            updateUsing();
+        }
         lastLab = Optional.empty();
         lastop = asmop;
     }
@@ -264,20 +345,13 @@ public class StackLocals {
         }
     }
 
-    public void acceptVarDirectives(MethodVisitor mv, List<JynxVar> jvars) {
-        locals().addSymbolicVars(jvars);
-        for (JynxVar jvar:jvars) {
-            boolean ok = visitVarDirective(jvar);
-            if (ok) {
-                jvar.accept(mv, labelmap);
-            } else {
-                LOG(jvar.getLine().toString(), M54, jvar.varnum()); // "variable %d has not been written to"
-            }
+    public boolean visitVarDirective(JynxVarNode jvar) {
+        boolean ok = locals().visitVarDirective(FrameElement.fromDesc(jvar.desc()), jvar.varnum());
+        if (!ok) {
+            // "variable %d has not been written to"
+            LOG(jvar.line().toString(), M54, jvar.varnum());            
         }
-    }
-    
-    private boolean visitVarDirective(JynxVar jvar) {
-        return locals().visitVarDirective(FrameElement.fromDesc(jvar.desc()), jvar.varnum());
+        return ok;
     }
 
     
@@ -287,8 +361,12 @@ public class StackLocals {
     
     public void visitEnd() {
         locals.visitEnd();
-        if(!returns && (returnOp != JvmOp.asm_return || !hasThrow)) {
+        boolean ok = returns || hasThrow;
+        if (!returns) {
             LOG(M196,returnOp); // "no %s instruction found"
+            if (!hasThrow) {
+                LOG(M196,JvmOp.asm_athrow); // "no %s instruction found"            
+            }
         }
         switch(completion) {
             case OP -> {
@@ -314,28 +392,20 @@ public class StackLocals {
         }
     }
 
-    private void updateLocal(JynxLabel label, LocalFrame osf) {
-        label.updateLocal(osf);
+    private void updateLocalCurrent(JynxLabel labelx, Collection<JynxLabel> labels) {
+        LocalFrame osf = locals.currentFrame();
+        labelx.updateLocal(osf);
+        for (var label : labels) {
+            label.updateLocal(osf);
+        }
     }
     
 
-    public void adjustLabelJump(JynxLabel label, JvmOp jvmop) {
+    private void adjustLabelJump(JynxLabel label, JvmOp jvmop) {
         stack.checkStack(label, jvmop);
-        LocalFrame osf = locals.currentFrame();
-        updateLocal(label, osf);
-        for (JynxLabel using:labelmap.getThrowsTo(label)) {
-            updateLocal(using, osf);
-        }
+        updateLocalCurrent(label, labelmap.getThrowsTo(label));
     }
     
-    private void updateLocal(JynxLabel dflt,Collection<JynxLabel> labels) {
-        LocalFrame osf = locals.currentFrame();
-        updateLocal(dflt,osf);
-        for (JynxLabel label:labels) {
-            updateLocal(label,osf);
-        }
-    }
-
     private void checkStack(JynxLabel dflt, Collection<JynxLabel> labels) {
         OperandStackFrame osf = stack.currentFrame();
         stack.checkStack(dflt,osf);
@@ -345,20 +415,20 @@ public class StackLocals {
     }
     
 
-    public void adjustLabelSwitch(JynxLabel dflt, Collection<JynxLabel> labels) {
+    private void adjustLabelSwitch(JynxLabel dflt, Collection<JynxLabel> labels) {
         checkStack(dflt, labels);
-        updateLocal(dflt, labels);
+        updateLocalCurrent(dflt, labels);
     }
 
-    public void adjustStackOperand(String desc) {
+    private void adjustStackOperand(String desc) {
         stack.adjustOperand(desc);
     }
     
-    public void adjustStackOperand(JvmOp jvmop, JynxHandle mh) {
+    private void adjustStackOperand(JvmOp jvmop, JynxHandle mh) {
         stack.adjustInvoke(jvmop, mh);
     }
     
-    public int adjustIncr(Token vartoken) {
+    private int adjustIncr(Token vartoken) {
         char ctype = 'I';
         int var = locals.loadVarNumber(vartoken);
         FrameElement fe = locals.loadType(ctype,var);
@@ -384,10 +454,20 @@ public class StackLocals {
         for (JynxLabel lab:activeLabels) {
             lab.store(fe,var);
         }
+        updateUsing();
         return var;
     }
 
-    public int adjustLoadStore(JvmOp jop, Token vartoken) {
+    private void updateUsing() {
+        for (var katch : activeCatch) {
+            var using = katch.using();
+            if (!activeLabels.contains(using) && !katch.to().equals(using)) {
+                using.updateLocal(locals.currentFrame());
+            }
+        }        
+    }
+    
+    private int adjustLoadStore(JvmOp jop, Token vartoken) {
         char ctype = jop.vartype();
         if (jop.isStoreVar()) {
             return adjustStore(ctype, vartoken);
@@ -396,7 +476,7 @@ public class StackLocals {
         }
     }
     
-    public void adjustStack(JvmOp jop) {
+    private void adjustStack(JvmOp jop) {
         String opdesc = jop.desc();
         if (opdesc == null) {
             throw new AssertionError("" + jop);
@@ -405,7 +485,7 @@ public class StackLocals {
         }
     }
     
-    public void adjustStackOp(JvmOp jop) {
+    private void adjustStackOp(JvmOp jop) {
         if (jop.isStack()) {
             stack.adjustStackOp(jop);
         } else {

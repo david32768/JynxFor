@@ -1,6 +1,7 @@
 package com.github.david32768.jynxfor.instruction;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
 
@@ -17,20 +18,20 @@ import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.res_default;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 
 import jynx2asm.JynxLabel;
 
-public abstract class SwitchInstruction implements JynxInstruction {
+public abstract class SwitchInstruction extends AbstractInstruction {
 
-    protected final JvmOp jvmop;    
     private final int unpaddedLength;
 
     private int minPadding;
     private int maxPadding;
     
-    protected SwitchInstruction(JvmOp jop, long unpaddedlength) {
-        this.jvmop = jop;
+    protected SwitchInstruction(JvmOp jvmop, long unpaddedlength, Line line) {
+        super(jvmop, line);
         if (unpaddedlength < 0 || unpaddedlength > UNPADDED_MAX) {
             // "size of %s is %d which exceeds %d"
             throw new LogIllegalArgumentException(M256,JvmOp.asm_tableswitch,unpaddedlength, UNPADDED_MAX);
@@ -40,10 +41,8 @@ public abstract class SwitchInstruction implements JynxInstruction {
         this.maxPadding = 3;
     }
     
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
-    }
+    public abstract Collection<JynxLabel> labels();
+    public abstract JynxLabel dfltLabel();
     
     private static final int UNPADDED_MAX = MAX_CODE - 3 - 3; // 3 at start to align and 3 at end
     
@@ -67,14 +66,15 @@ public abstract class SwitchInstruction implements JynxInstruction {
         return maxPadding + unpaddedLength;
     }
 
-    public static JynxInstruction getInstance(JvmOp jvmop, JynxLabel dflt, SortedMap<Integer,JynxLabel> swmap) {
+    public static JynxInstruction getInstance(JvmOp jvmop, JynxLabel dflt,
+            SortedMap<Integer,JynxLabel> swmap, Line line) {
         if (swmap.isEmpty()) {
             if (jvmop == asm_tableswitch) {
                 // "invalid %s as only has %s: case 0 -> %s added"
                 LOG(M224, jvmop, res_default, dflt.name());
                 swmap.put(0, dflt);
             } else {
-                return new LookupInstruction(dflt,swmap);        
+                return new LookupInstruction(dflt,swmap,line);        
             }
         }
         
@@ -89,14 +89,14 @@ public abstract class SwitchInstruction implements JynxInstruction {
         }
         
         if (jvmop == JvmOp.asm_tableswitch) {
-            return lookupToTableSwitch(min, max, dflt, swmap);
+            return lookupToTableSwitch(min, max, dflt, swmap, line);
         }
         
         long lookupsz = LookupInstruction.minsize(swmap.size());
         boolean consec = range == swmap.size();
         boolean tablesmaller = tablesz < lookupsz;
         if (jvmop == opc_switch && tablesmaller) {
-            return lookupToTableSwitch(min, max, dflt, swmap);
+            return lookupToTableSwitch(min, max, dflt, swmap, line);
         }
         
         // use lookupswitch
@@ -109,17 +109,18 @@ public abstract class SwitchInstruction implements JynxInstruction {
                 LOG(M323, JvmOp.asm_tableswitch, tablesz, JvmOp.asm_lookupswitch, lookupsz, range, swmap.size());
             }
         }
-        return new LookupInstruction(dflt,swmap);
+        return new LookupInstruction(dflt,swmap,line);
     }
     
-    private static JynxInstruction lookupToTableSwitch(int min, int max, JynxLabel dflt,SortedMap<Integer,JynxLabel> swmap) {
+    private static JynxInstruction lookupToTableSwitch(int min, int max,
+            JynxLabel dflt,SortedMap<Integer,JynxLabel> swmap, Line line) {
         assert max >= min;
         List<JynxLabel> labellist = new ArrayList<>();
         for (int i = min; i <= max; ++i) {
             JynxLabel label = swmap.getOrDefault(i, dflt);
             labellist.add(label);
         }
-        return new TableInstruction(min, max, dflt, labellist);
+        return new TableInstruction(min, max, dflt, labellist, line);
     }
     
 }

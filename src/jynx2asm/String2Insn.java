@@ -118,7 +118,7 @@ public class String2Insn {
                 target.updateStack(osf);
             }
         }
-        instlist.add(new LabelInstruction(JvmOp.xxx_label, target));
+        instlist.add(new LabelInstruction(JvmOp.xxx_label, target, line));
     }
     
     public void add(JynxOp jynxop, InstList instlist) {
@@ -191,18 +191,18 @@ public class String2Insn {
     
     private JynxInstruction arg_atype(JvmOp jvmop) {
         int atype = line.nextToken().asTypeCode();
-        return new IntInstruction(jvmop, atype);
+        return new IntInstruction(jvmop, atype, line);
     }
     
     private JynxInstruction arg_byte(JvmOp jvmop) {
         int v = line.nextToken().asByte();
-        return new IntInstruction(jvmop,v);
+        return new IntInstruction(jvmop, v, line);
     }
     
     private JynxInstruction arg_callsite(JvmOp jvmop) {
         JynxConstantDynamic jcd = new JynxConstantDynamic(line, checker);
         ConstantDynamic cd = jcd.getConstantDynamic4Invoke();
-        return new DynamicInstruction(jvmop, cd);
+        return new DynamicInstruction(jvmop, cd, line);
     }
     
     private JynxInstruction arg_class(JvmOp jvmop) {
@@ -214,7 +214,7 @@ public class String2Insn {
         } else {
             OBJECT_NAME.validate(type);
         }
-        return new TypeInstruction(jvmop, type);
+        return new TypeInstruction(jvmop, type, line);
     }
   
     private JynxInstruction simpleConstant(JvmOp jvmop) {
@@ -258,7 +258,7 @@ public class String2Insn {
                 default -> {}
             }
         }
-        return new LdcInstruction(jvmop, value, ct);
+        return new LdcInstruction(jvmop, value, ct, line);
     }
     
     private JynxInstruction dynamicConstant(JvmOp jvmop) {
@@ -276,7 +276,7 @@ public class String2Insn {
             LOG(M154, jvmop, required);
             jvmop = required;
         }
-        return new LdcInstruction(jvmop, dyn, ct);
+        return new LdcInstruction(jvmop, dyn, ct, line);
     }
     
     private JynxInstruction arg_constant(JvmOp jvmop) {
@@ -293,12 +293,12 @@ public class String2Insn {
             case xxx_label -> {
                 String labstr = line.nextToken().asString();
                 JynxLabel target = labelMap.defineJynxLabel(labstr, line);
-                return new LabelInstruction(jvmop, target);
+                return new LabelInstruction(jvmop, target, line);
             }
             case xxx_label_weak -> {
                 String labstr = line.nextToken().asString();
                 JynxLabel target = labelMap.defineWeakJynxLabel(labstr, line);
-                return target == null?null:new LabelInstruction(jvmop, target);
+                return target == null?null:new LabelInstruction(jvmop, target, line);
             }
             case xxx_line -> {
                 int lineno = line.nextToken().asUnsignedShort();
@@ -306,7 +306,7 @@ public class String2Insn {
                     LOG(M95,GENERATE_LINE_NUMBERS); // ".line directives ignored as %s specified"
                     return null;
                 }
-                return new LineInstruction(lineno);
+                return new LineInstruction(lineno, line);
             }
             default -> throw new LogUnexpectedEnumValueException(jvmop);
         }
@@ -317,13 +317,13 @@ public class String2Insn {
         String desc = line.nextToken().asString();
         FieldHandle fh = FieldHandle.getInstance(fname, desc,HandleType.fromOp(jvmop.getOpcode(), false));
         checker.usedField(fh);
-        return new FieldInstruction(jvmop,fh);
+        return new FieldInstruction(jvmop, fh, line);
     }
     
     private JynxInstruction arg_incr(JvmOp jvmop) {
         Token vartoken = line.nextToken();
         int incr = line.nextToken().asShort();
-        return new IncrInstruction(jvmop, vartoken, incr);
+        return new IncrInstruction(jvmop, vartoken, incr, line);
     }
 
     private JynxInstruction arg_label(JvmOp jvmop, boolean unreachable) {
@@ -335,7 +335,7 @@ public class String2Insn {
             jvmop = JvmOp.asm_goto;
         }
         JynxLabel jlab = getJynxLabel(label);
-        return new JumpInstruction(jvmop, jlab);
+        return new JumpInstruction(jvmop, jlab, line);
     }
 
     private JynxInstruction arg_marray(JvmOp jvmop) {
@@ -346,14 +346,14 @@ public class String2Insn {
         if (dims == 0 || dims > lastbracket) {
             LOG(M253,dims,lastbracket);  // "illegal number of dimensions %d; must be in range [0,%d]"
         }
-        return new MarrayInstruction(jvmop, desc, dims);
+        return new MarrayInstruction(jvmop, desc, dims, line);
     }
 
     private JynxInstruction arg_method(JvmOp jvmop) {
         String mspec = line.nextToken().asString();
         MethodHandle mh = MethodHandle.getInstance(mspec,jvmop);
         checker.usedMethod(mh, jvmop, line);
-        return new MethodInstruction(jvmop, mh);
+        return new MethodInstruction(jvmop, mh, line);
     }
 
     private JynxInstruction arg_none(JvmOp jvmop) {
@@ -361,16 +361,16 @@ public class String2Insn {
             LOG(M210,JvmOp.opc_wide);    // "%s instruction ignored as not required"
             return null;
         }
-        return OpcodeInstruction.getInstance(jvmop);
+        return OpcodeInstruction.getInstance(jvmop, line);
     }
 
     private JynxInstruction arg_short(JvmOp jvmop) {
         int v = line.nextToken().asShort();
-        return new IntInstruction(jvmop, v);
+        return new IntInstruction(jvmop, v, line);
     }
     
     private JynxInstruction arg_stack(JvmOp jvmop) {
-        return new StackInstruction(jvmop);
+        return new StackInstruction(jvmop, line);
     }
 
     private JynxInstruction arg_switch(JvmOp jvmop) {
@@ -401,7 +401,7 @@ public class String2Insn {
                         swmap.putIfAbsent(low, dflt);
                         swmap.putIfAbsent(high, dflt);
                     }
-                    return SwitchInstruction.getInstance(jvmop, dflt, swmap);
+                    return SwitchInstruction.getInstance(jvmop, dflt, swmap, line);
                 }
                 int key = value.asInt();
                 dotarray.nextToken().mustBe(right_arrow);
@@ -455,7 +455,7 @@ public class String2Insn {
         } else {
             token = line.nextToken();
         }
-        return new VarInstruction(jvmop, token);
+        return new VarInstruction(jvmop, token, line);
     }
 
 }

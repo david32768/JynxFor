@@ -32,27 +32,27 @@ import asm.CheckOpcodes;
 
 public enum JvmOp implements JynxOp {
 
-    asm_aaload(50, 1, "(AI)A", arg_none, AALOAD),
-    asm_aastore(83, 1, "(AIA)V", arg_none, AASTORE),
+    asm_aaload(50, true, 1, "(AI)A", arg_none, AALOAD),
+    asm_aastore(83, true, 1, "(AIA)V", arg_none, AASTORE),
     asm_aconst_null(1, 1, "()A", arg_none, ACONST_NULL),
     asm_aload(25, 2, "()A", arg_var, ALOAD),
-    asm_anewarray(189, 3, "(I)A", arg_class, ANEWARRAY),
-    asm_areturn(176, 1, "(A)V", arg_none, ARETURN),
-    asm_arraylength(190, 1, "(A)I", arg_none, ARRAYLENGTH),
+    asm_anewarray(189, true, 3, "(I)A", arg_class, ANEWARRAY),
+    asm_areturn(176, true, 1, "(A)V", arg_none, ARETURN),
+    asm_arraylength(190, true, 1, "(A)I", arg_none, ARRAYLENGTH),
     asm_astore(58, 2, "(A)V", arg_var, ASTORE),
-    asm_athrow(191, 1, "(A)V", arg_none, ATHROW),
-    asm_baload(51, 1, "(AI)I", arg_none, BALOAD),
-    asm_bastore(84, 1, "(AII)V", arg_none, BASTORE),
+    asm_athrow(191, true, 1, "(A)V", arg_none, ATHROW),
+    asm_baload(51, true, 1, "(AI)I", arg_none, BALOAD),
+    asm_bastore(84, true, 1, "(AII)V", arg_none, BASTORE),
     asm_bipush(16, 2, "()I", arg_byte, BIPUSH),
-    asm_caload(52, 1, "(AI)I", arg_none, CALOAD),
-    asm_castore(85, 1, "(AII)V", arg_none, CASTORE),
-    asm_checkcast(192, 3, "(A)A", arg_class, CHECKCAST),
+    asm_caload(52, true, 1, "(AI)I", arg_none, CALOAD),
+    asm_castore(85, true, 1, "(AII)V", arg_none, CASTORE),
+    asm_checkcast(192, true, 3, "(A)A", arg_class, CHECKCAST),
     asm_d2f(144, 1, "(D)F", arg_none, D2F),
     asm_d2i(142, 1, "(D)I", arg_none, D2I),
     asm_d2l(143, 1, "(D)J", arg_none, D2L),
     asm_dadd(99, 1, "(DD)D", arg_none, DADD),
-    asm_daload(49, 1, "(AI)D", arg_none, DALOAD),
-    asm_dastore(82, 1, "(AID)V", arg_none, DASTORE),
+    asm_daload(49, true, 1, "(AI)D", arg_none, DALOAD),
+    asm_dastore(82, true, 1, "(AID)V", arg_none, DASTORE),
     asm_dcmpg(152, 1, "(DD)I", arg_none, DCMPG),
     asm_dcmpl(151, 1, "(DD)I", arg_none, DCMPL),
     asm_dconst_0(14, 1, "()D", arg_none, DCONST_0),
@@ -62,7 +62,7 @@ public enum JvmOp implements JynxOp {
     asm_dmul(107, 1, "(DD)D", arg_none, DMUL),
     asm_dneg(119, 1, "(D)D", arg_none, DNEG),
     asm_drem(115, 1, "(DD)D", arg_none, DREM),
-    asm_dreturn(175, 1, "(D)V", arg_none, DRETURN),
+    asm_dreturn(175, true, 1, "(D)V", arg_none, DRETURN),
     asm_dstore(57, 2, "(D)V", arg_var, DSTORE),
     asm_dsub(103, 1, "(DD)D", arg_none, DSUB),
     asm_dup(89, 1, "t->tt", arg_stack, DUP),
@@ -75,8 +75,8 @@ public enum JvmOp implements JynxOp {
     asm_f2i(139, 1, "(F)I", arg_none, F2I),
     asm_f2l(140, 1, "(F)J", arg_none, F2L),
     asm_fadd(98, 1, "(FF)F", arg_none, FADD),
-    asm_faload(48, 1, "(AI)F", arg_none, FALOAD),
-    asm_fastore(81, 1, "(AIF)V", arg_none, FASTORE),
+    asm_faload(48, true, 1, "(AI)F", arg_none, FALOAD),
+    asm_fastore(81, true, 1, "(AIF)V", arg_none, FASTORE),
     asm_fcmpg(150, 1, "(FF)I", arg_none, FCMPG),
     asm_fcmpl(149, 1, "(FF)I", arg_none, FCMPL),
     asm_fconst_0(11, 1, "()F", arg_none, FCONST_0),
@@ -87,11 +87,11 @@ public enum JvmOp implements JynxOp {
     asm_fmul(106, 1, "(FF)F", arg_none, FMUL),
     asm_fneg(118, 1, "(F)F", arg_none, FNEG),
     asm_frem(114, 1, "(FF)F", arg_none, FREM),
-    asm_freturn(174, 1, "(F)V", arg_none, FRETURN),
+    asm_freturn(174, true, 1, "(F)V", arg_none, FRETURN),
     asm_fstore(56, 2, "(F)V", arg_var, FSTORE),
     asm_fsub(102, 1, "(FF)F", arg_none, FSUB),
-    asm_getfield(180, 3, null, arg_field, GETFIELD),
-    asm_getstatic(178, 3, null, arg_field, GETSTATIC),
+    asm_getfield(180, true, 3, null, arg_field, GETFIELD),
+    asm_getstatic(178, true, 3, null, arg_field, GETSTATIC),
     asm_goto(167, 3, "()V", arg_label, GOTO),
     asm_i2b(145, 1, "(I)I", arg_none, I2B),
     asm_i2c(146, 1, "(I)I", arg_none, I2C),
@@ -100,9 +100,9 @@ public enum JvmOp implements JynxOp {
     asm_i2l(133, 1, "(I)J", arg_none, I2L),
     asm_i2s(147, 1, "(I)I", arg_none, I2S),
     asm_iadd(96, 1, "(II)I", arg_none, IADD),
-    asm_iaload(46, 1, "(AI)I", arg_none, IALOAD),
+    asm_iaload(46, true, 1, "(AI)I", arg_none, IALOAD),
     asm_iand(126, 1, "(II)I", arg_none, IAND),
-    asm_iastore(79, 1, "(AII)V", arg_none, IASTORE),
+    asm_iastore(79, true, 1, "(AII)V", arg_none, IASTORE),
     asm_iconst_0(3, 1, "()I", arg_none, ICONST_0),
     asm_iconst_1(4, 1, "()I", arg_none, ICONST_1),
     asm_iconst_2(5, 1, "()I", arg_none, ICONST_2),
@@ -110,7 +110,7 @@ public enum JvmOp implements JynxOp {
     asm_iconst_4(7, 1, "()I", arg_none, ICONST_4),
     asm_iconst_5(8, 1, "()I", arg_none, ICONST_5),
     asm_iconst_m1(2, 1, "()I", arg_none, ICONST_M1),
-    asm_idiv(108, 1, "(II)I", arg_none, IDIV),
+    asm_idiv(108, true, 1, "(II)I", arg_none, IDIV),
     asm_if_acmpeq(165, 3, "(AA)V", arg_label, IF_ACMPEQ),
     asm_if_acmpne(166, 3, "(AA)V", arg_label, IF_ACMPNE),
     asm_if_icmpeq(159, 3, "(II)V", arg_label, IF_ICMPEQ),
@@ -131,61 +131,61 @@ public enum JvmOp implements JynxOp {
     asm_iload(21, 2, "()I", arg_var, ILOAD),
     asm_imul(104, 1, "(II)I", arg_none, IMUL),
     asm_ineg(116, 1, "(I)I", arg_none, INEG),
-    asm_instanceof(193, 3, "(A)I", arg_class, INSTANCEOF),
-    asm_invokedynamic(186, 5, null, arg_callsite, INVOKEDYNAMIC, Feature.invokeDynamic),
-    asm_invokeinterface(185, 5, null, arg_interface, INVOKEINTERFACE),
-    asm_invokespecial(183, 3, null, arg_method, INVOKESPECIAL, Feature.invokespecial),
-    asm_invokestatic(184, 3, null, arg_method, INVOKESTATIC),
-    asm_invokevirtual(182, 3, null, arg_method, INVOKEVIRTUAL),
+    asm_instanceof(193, true, 3, "(A)I", arg_class, INSTANCEOF),
+    asm_invokedynamic(186, true, 5, null, arg_callsite, INVOKEDYNAMIC, Feature.invokeDynamic),
+    asm_invokeinterface(185, true, 5, null, arg_interface, INVOKEINTERFACE),
+    asm_invokespecial(183, true, 3, null, arg_method, INVOKESPECIAL, Feature.invokespecial),
+    asm_invokestatic(184, true, 3, null, arg_method, INVOKESTATIC),
+    asm_invokevirtual(182, true, 3, null, arg_method, INVOKEVIRTUAL),
     asm_ior(128, 1, "(II)I", arg_none, IOR),
-    asm_irem(112, 1, "(II)I", arg_none, IREM),
-    asm_ireturn(172, 1, "(I)V", arg_none, IRETURN),
+    asm_irem(112, true, 1, "(II)I", arg_none, IREM),
+    asm_ireturn(172, true, 1, "(I)V", arg_none, IRETURN),
     asm_ishl(120, 1, "(II)I", arg_none, ISHL),
     asm_ishr(122, 1, "(II)I", arg_none, ISHR),
     asm_istore(54, 2, "(I)V", arg_var, ISTORE),
     asm_isub(100, 1, "(II)I", arg_none, ISUB),
     asm_iushr(124, 1, "(II)I", arg_none, IUSHR),
     asm_ixor(130, 1, "(II)I", arg_none, IXOR),
-    asm_jsr(168, 3, "()V", arg_label, JSR, Feature.subroutines),
+    asm_jsr(168,false, 3, "()V", arg_label, JSR, Feature.subroutines),
     asm_l2d(138, 1, "(J)D", arg_none, L2D),
     asm_l2f(137, 1, "(J)F", arg_none, L2F),
     asm_l2i(136, 1, "(J)I", arg_none, L2I),
     asm_ladd(97, 1, "(JJ)J", arg_none, LADD),
-    asm_laload(47, 1, "(AI)J", arg_none, LALOAD),
+    asm_laload(47, true, 1, "(AI)J", arg_none, LALOAD),
     asm_land(127, 1, "(JJ)J", arg_none, LAND),
-    asm_lastore(80, 1, "(AIJ)V", arg_none, LASTORE),
+    asm_lastore(80, true, 1, "(AIJ)V", arg_none, LASTORE),
     asm_lcmp(148, 1, "(JJ)I", arg_none, LCMP),
     asm_lconst_0(9, 1, "()J", arg_none, LCONST_0),
     asm_lconst_1(10, 1, "()J", arg_none, LCONST_1),
-    asm_ldc(18, 2, null, arg_constant, LDC),
-    asm_ldiv(109, 1, "(JJ)J", arg_none, LDIV),
+    asm_ldc(18, true, 2, null, arg_constant, LDC),
+    asm_ldiv(109, true, 1, "(JJ)J", arg_none, LDIV),
     asm_lload(22, 2, "()J", arg_var, LLOAD),
     asm_lmul(105, 1, "(JJ)J", arg_none, LMUL),
     asm_lneg(117, 1, "(J)J", arg_none, LNEG),
     asm_lookupswitch(171, null, "(I)V", arg_switch, LOOKUPSWITCH),
     asm_lor(129, 1, "(JJ)J", arg_none, LOR),
-    asm_lrem(113, 1, "(JJ)J", arg_none, LREM),
-    asm_lreturn(173, 1, "(J)V", arg_none, LRETURN),
+    asm_lrem(113, true, 1, "(JJ)J", arg_none, LREM),
+    asm_lreturn(173, true, 1, "(J)V", arg_none, LRETURN),
     asm_lshl(121, 1, "(JI)J", arg_none, LSHL),
     asm_lshr(123, 1, "(JI)J", arg_none, LSHR),
     asm_lstore(55, 2, "(J)V", arg_var, LSTORE),
     asm_lsub(101, 1, "(JJ)J", arg_none, LSUB),
     asm_lushr(125, 1, "(JI)J", arg_none, LUSHR),
     asm_lxor(131, 1, "(JJ)J", arg_none, LXOR),
-    asm_monitorenter(194, 1, "(A)V", arg_none, MONITORENTER),
-    asm_monitorexit(195, 1, "(A)V", arg_none, MONITOREXIT),
-    asm_multianewarray(197, 4, null, arg_marray, MULTIANEWARRAY),
-    asm_new(187, 3, "()A", arg_class, NEW),
-    asm_newarray(188, 2, "(I)A", arg_atype, NEWARRAY),
+    asm_monitorenter(194, true, 1, "(A)V", arg_none, MONITORENTER),
+    asm_monitorexit(195, true, 1, "(A)V", arg_none, MONITOREXIT),
+    asm_multianewarray(197, true, 4, null, arg_marray, MULTIANEWARRAY),
+    asm_new(187, true, 3, "()A", arg_class, NEW),
+    asm_newarray(188, true, 2, "(I)A", arg_atype, NEWARRAY),
     asm_nop(0, 1, "()V", arg_none, NOP),
     asm_pop(87, 1, "t->", arg_stack, POP),
     asm_pop2(88, 1, "T->", arg_stack, POP2),
-    asm_putfield(181, 3, null, arg_field, PUTFIELD),
-    asm_putstatic(179, 3, null, arg_field, PUTSTATIC),
-    asm_ret(169, 2, "()V", arg_var, RET, Feature.subroutines),
-    asm_return(177, 1, "()V", arg_none, RETURN),
-    asm_saload(53, 1, "(AI)I", arg_none, SALOAD),
-    asm_sastore(86, 1, "(AII)V", arg_none, SASTORE),
+    asm_putfield(181, true, 3, null, arg_field, PUTFIELD),
+    asm_putstatic(179, true, 3, null, arg_field, PUTSTATIC),
+    asm_ret(169, false, 2, "()V", arg_var, RET, Feature.subroutines),
+    asm_return(177, true, 1, "()V", arg_none, RETURN),
+    asm_saload(53, true, 1, "(AI)I", arg_none, SALOAD),
+    asm_sastore(86, true, 1, "(AII)V", arg_none, SASTORE),
     asm_sipush(17, 3, "()I", arg_short, SIPUSH),
     asm_swap(95, 1, "nt->tn", arg_stack, SWAP),
     asm_tableswitch(170, null, "(I)V", arg_switch, TABLESWITCH),
@@ -227,15 +227,15 @@ public enum JvmOp implements JynxOp {
     opc_iload_2(28, 1, "()I", arg_var, ILOAD),
     opc_iload_3(29, 1, "()I", arg_var, ILOAD),
     opc_iload_w(21, 4, "()I", arg_var, ILOAD),
-    opc_invokenonvirtual(183, 3, null, arg_method, INVOKESPECIAL, Feature.invokenonvirtual),
+    opc_invokenonvirtual(183, true, 3, null, arg_method, INVOKESPECIAL, Feature.invokenonvirtual),
     opc_istore_0(59, 1, "(I)V", arg_var, ISTORE),
     opc_istore_1(60, 1, "(I)V", arg_var, ISTORE),
     opc_istore_2(61, 1, "(I)V", arg_var, ISTORE),
     opc_istore_3(62, 1, "(I)V", arg_var, ISTORE),
     opc_istore_w(54, 4, "(I)V", arg_var, ISTORE),
-    opc_jsr_w(201, 5, "()V", arg_label, JSR, Feature.subroutines),
-    opc_ldc2_w(20, 3, null, arg_constant, LDC),
-    opc_ldc_w(19, 3, null, arg_constant, LDC),
+    opc_jsr_w(201,false, 5, "()V", arg_label, JSR, Feature.subroutines),
+    opc_ldc2_w(20, true, 3, null, arg_constant, LDC),
+    opc_ldc_w(19, true, 3, null, arg_constant, LDC),
     opc_lload_0(30, 1, "()J", arg_var, LLOAD),
     opc_lload_1(31, 1, "()J", arg_var, LLOAD),
     opc_lload_2(32, 1, "()J", arg_var, LLOAD),
@@ -246,7 +246,7 @@ public enum JvmOp implements JynxOp {
     opc_lstore_2(65, 1, "(J)V", arg_var, LSTORE),
     opc_lstore_3(66, 1, "(J)V", arg_var, LSTORE),
     opc_lstore_w(55, 4, "(J)V", arg_var, LSTORE),
-    opc_ret_w(169, 4, "()V", arg_var, RET, Feature.subroutines),
+    opc_ret_w(169,false, 4, "()V", arg_var, RET, Feature.subroutines),
 
     opc_switch(171, null, "(I)V", arg_switch, LOOKUPSWITCH),
 
@@ -265,14 +265,20 @@ public enum JvmOp implements JynxOp {
     private final OpArg args;
     private final int asmOpcode;
     private final Feature requires;
+    private final boolean canThrow;
 
     private JvmOp(int opcode, Integer length, String desc, OpArg args, int asmOpcode) {
-        this(opcode, length, desc, args, asmOpcode, Feature.unlimited);
+        this(opcode, false, length, desc, args, asmOpcode, Feature.unlimited);
+    }
+    
+    private JvmOp(int opcode, boolean canThrow, Integer length, String desc, OpArg args, int asmOpcode) {
+        this(opcode, canThrow, length, desc, args, asmOpcode, Feature.unlimited);
     }
 
-    private JvmOp(int opcode, Integer length, String desc, OpArg args, int asmOpcode, Feature requires) {
+    private JvmOp(int opcode, boolean canThrow, Integer length, String desc, OpArg args, int asmOpcode, Feature requires) {
         this.externalName = name().substring(4);
         this.opcode = opcode;
+        this.canThrow = canThrow;
         this.length = length;
         this.asmOpcode = asmOpcode;
         this.args = args;
@@ -318,8 +324,9 @@ public enum JvmOp implements JynxOp {
                                 && (op.args() == arg_var || op.args() == arg_incr);
                         boolean samefeature = Objects.equals(op.requires, mapop.requires);
                         boolean sameswitch = mapop == asm_lookupswitch && op == opc_switch;
+                        boolean samethrow = mapop.canThrow == op.canThrow;
                         
-                        boolean validsame = sameargs && (samevar || sameswitch);
+                        boolean validsame = sameargs && samethrow && (samevar || sameswitch);
                         boolean nonvirtual = sameargs && mapop == asm_invokespecial && op == opc_invokenonvirtual;
                         
                         if (validsame && !samefeature) {
@@ -361,6 +368,10 @@ public enum JvmOp implements JynxOp {
     
     public Opcode getOpcode() {
         return Opcodes.of(this.opcode);
+    }
+
+    public boolean canThrow() {
+        return canThrow;
     }
     
     public int opcode() {

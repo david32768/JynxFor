@@ -15,13 +15,13 @@ import static com.github.david32768.jynxfor.my.Message.M230;
 import static com.github.david32768.jynxfor.my.Message.M337;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
+import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 
-import asm.JynxVar;
 import jynx2asm.FrameElement;
 import jynx2asm.JynxLabel;
 
@@ -32,19 +32,21 @@ public class SymbolicVars extends LocalVars {
     private final Map<String,Integer> varmap;
     private final Map<String,FrameElement> typemap;
     private final boolean isVirtual;
+    private final JynxCodeNodeBuilder codeBuilder;
     
     private int next;
 
-    private SymbolicVars(MethodParameters parameters) {
+    private SymbolicVars(MethodParameters parameters, JynxCodeNodeBuilder codeBuilder) {
         super(parameters);
         this.varmap = new LinkedHashMap<>();
         this.typemap = new HashMap<>();
         this.isVirtual = !parameters.isStatic();
+        this.codeBuilder = codeBuilder;
         this.next = 0;
     }
     
-    public static SymbolicVars getInstance(MethodParameters parameters) {
-        SymbolicVars sv = new SymbolicVars(parameters);
+    public static SymbolicVars getInstance(MethodParameters parameters, JynxCodeNodeBuilder codeBuilder) {
+        SymbolicVars sv = new SymbolicVars(parameters, codeBuilder);
         ParameterNode[] parmnodes = parameters.getParameters();
         StackMapLocals smlocals = StackMapLocals.getInstance(parameters.getInitFrame());
         sv.setParms(smlocals, parmnodes);
@@ -115,22 +117,11 @@ public class SymbolicVars extends LocalVars {
         FrameElement shouldbenull = typemap.putIfAbsent(tokenstr,fe);
         assert shouldbenull == null;
         varmap.put(tokenstr, number);
+        codeBuilder.addVar(number, tokenstr, fe.desc());
         next += fe.slots();
         return number;        
     }
 
-    @Override
-    public void addSymbolicVars(List<JynxVar> jvars)  {
-        assert jvars.isEmpty();
-        for (Map.Entry<String, Integer> me : varmap.entrySet()) {
-            String name = me.getKey();
-            int num = me.getValue();
-            FrameElement fe = typemap.get(name);
-            JynxVar jvar = JynxVar.getIntance(num, name, fe.desc());
-            jvars.add(jvar);
-        }
-    }
-    
     @Override
     public void visitFrame(List<Object> localarr, Optional<JynxLabel> lastLab) {
         // "stackmap locals have been ignored as %s specified"

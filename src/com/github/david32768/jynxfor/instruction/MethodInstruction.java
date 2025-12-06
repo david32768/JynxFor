@@ -3,23 +3,21 @@ package com.github.david32768.jynxfor.instruction;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 
 import jynx2asm.handles.MethodHandle;
-import jynx2asm.StackLocals;
 
-public class MethodInstruction implements JynxInstruction {
+public class MethodInstruction extends AbstractInstruction {
 
-    private final JvmOp jvmop;    
     private final MethodHandle mh;
 
-    public MethodInstruction(JvmOp jop, MethodHandle mh) {
-        this.jvmop = jop;
+    public MethodInstruction(JvmOp jvmop, MethodHandle mh, Line line) {
+        super(jvmop, line);
         this.mh = mh;
     }
 
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
+    public MethodHandle methodHandle() {
+        return mh;
     }
     
     @Override
@@ -28,18 +26,8 @@ public class MethodInstruction implements JynxInstruction {
     }
 
     @Override
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustStackOperand(jvmop,mh);
-    }
-
-    @Override
     public String toString() {
         return String.format("%s %s",jvmop,mh.iond());
-    }
-
-    @Override
-    public boolean needLineNumber() {
-        return true;
     }
 
 }

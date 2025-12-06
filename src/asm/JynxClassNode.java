@@ -23,6 +23,7 @@ import static com.github.david32768.jynxfree.jynx.ClassType.RECORD;
 import static com.github.david32768.jynxfree.jynx.ClassType.VALUE_RECORD;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.TRACE;
 
+import com.github.david32768.jynxfor.node.JynxCodeNode;
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.verify.Resolver;
 import com.github.david32768.jynxfree.jvm.Feature;
@@ -122,8 +123,8 @@ public abstract class JynxClassNode {
         fnode.accept(cv);
     }
     
-    public void acceptMethod(JynxMethodNode jmethodnode) {
-        MethodNode mnode = jmethodnode.visitEnd();
+    public void acceptMethod(JynxMethodNode jmethodnode, JynxCodeNode codenode) {
+        MethodNode mnode = jmethodnode.visitEnd(codenode);
         if (mnode == null) {
             return;
         }
@@ -135,7 +136,17 @@ public abstract class JynxClassNode {
         try {
             analyzer.analyze(accessName.name(), mnode);
             verified =  true;
-        } catch (AnalyzerException | IllegalArgumentException e) {
+        } catch (AnalyzerException e) {
+            String emsg = e.getMessage();
+            var line = analyseExceptionMsg(emsg, codenode);
+            if (line == null) {
+                // "Method %s failed %s check:%n    %s"
+                LOG(e, M75, mnode.name, verifiername, emsg);
+            } else {
+                // "Method %s failed %s check:%n    %s"
+                LOG(e, line.toString(), M75, mnode.name, verifiername, emsg.substring(emsg.indexOf(':') + 1));                
+            }
+        } catch (IllegalArgumentException e) {
             String emsg = e.getMessage();
             // "Method %s failed %s check:%n    %s"
             LOG(e, M75, mnode.name, verifiername, emsg);
@@ -147,6 +158,22 @@ public abstract class JynxClassNode {
                 LOG(M411,ex.typeName()); // "type %s not found"
             }
         }
+    }
+    
+    private final static String INSTRUCTION = "instruction";
+    
+    private Line analyseExceptionMsg(String msg, JynxCodeNode codenode) {
+        if (msg != null && codenode != null && msg.contains(INSTRUCTION)) {
+            String rest = msg.substring(msg.indexOf(INSTRUCTION));
+            String[] words = rest.replace(':', ' ').split(" ");
+            assert words[0].equals(INSTRUCTION);
+            try {
+                int index = Integer.parseInt(words[1]);
+                var insn = codenode.getInstruction(index);
+                return insn.line();
+            } catch (NumberFormatException | IndexOutOfBoundsException ex) {}
+        }
+        return null;
     }
     
     public void acceptModule(JynxModule jmodule) {

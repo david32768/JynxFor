@@ -1,25 +1,32 @@
 package com.github.david32768.jynxfor.instruction;
 
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 
 import jynx2asm.JynxLabel;
-import jynx2asm.StackLocals;
 
-public class LabelInstruction implements JynxInstruction {
+public class LabelInstruction extends AbstractInstruction {
 
-    private final JvmOp jvmop;    
     private final JynxLabel jlab;
+    
+    private Object[] stackArray;
+    private Object[] localArray;
 
-    public LabelInstruction(JvmOp jop, JynxLabel jlab) {
-        this.jvmop = jop;
+    public LabelInstruction(JvmOp jvmop, JynxLabel jlab, Line line) {
+        super(jvmop, line);
         this.jlab = jlab;
     }
 
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
+    public JynxLabel jynxlab() {
+        return jlab;
+    }
+    
+    public void setFrame(Object[] stackArray, Object[] localArray) {
+        this.stackArray = stackArray;
+        this.localArray = localArray;
     }
     
     @Override
@@ -28,13 +35,11 @@ public class LabelInstruction implements JynxInstruction {
     }
 
     @Override
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustLabelDefine(jlab);
-    }
-
-    @Override
     public void accept(MethodVisitor mv) {
         mv.visitLabel(jlab.asmlabel());
+        if (localArray != null) {
+            mv.visitFrame(Opcodes.F_NEW, localArray.length, localArray, stackArray.length, stackArray);            
+        }        
     }
 
     @Override

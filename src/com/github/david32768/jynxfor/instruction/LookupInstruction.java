@@ -1,5 +1,6 @@
 package com.github.david32768.jynxfor.instruction;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -7,20 +8,30 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
 
 import jynx2asm.JynxLabel;
-import jynx2asm.StackLocals;
 
 public class LookupInstruction extends SwitchInstruction {
 
     private final JynxLabel dflt;
     private final Map<Integer,JynxLabel> intlabels;
 
-    public LookupInstruction(JynxLabel dflt, Map<Integer,JynxLabel> intlabels) {
-        super(JvmOp.asm_lookupswitch, minsize(intlabels.size()));
+    public LookupInstruction(JynxLabel dflt, Map<Integer,JynxLabel> intlabels, Line line) {
+        super(JvmOp.asm_lookupswitch, minsize(intlabels.size()), line);
         this.dflt = dflt;
         this.intlabels = intlabels;
+    }
+
+    @Override
+    public Collection<JynxLabel> labels() {
+        return intlabels.values();
+    }
+
+    @Override
+    public JynxLabel dfltLabel() {
+        return dflt;
     }
 
     private static final int OVERHEAD = 1 + 4 + 4; // opcode, dflt lbel, label count
@@ -29,12 +40,6 @@ public class LookupInstruction extends SwitchInstruction {
         return OVERHEAD + 8*labelct;
     }
     
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        super.adjust(stackLocals);
-        stackLocals.adjustLabelSwitch(dflt,intlabels.values());
-    }
-
     @Override
     public void accept(MethodVisitor mv) {
         Label[] asmlabels = intlabels.values().stream()

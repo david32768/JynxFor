@@ -3,22 +3,17 @@ package com.github.david32768.jynxfor.instruction;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 
-public class TypeInstruction implements JynxInstruction {
+public class TypeInstruction extends AbstractInstruction {
 
-    private final JvmOp jvmop;    
     private final String type;
 
-    public TypeInstruction(JvmOp jop, String type) {
-        this.jvmop = jop;
+    public TypeInstruction(JvmOp jvmop, String type, Line line) {
+        super(jvmop, line);
         this.type = type;
     }
 
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
-    }
-    
     @Override
     public void accept(MethodVisitor mv) {
         mv.visitTypeInsn(jvmop.asmOpcode(), type);
@@ -27,11 +22,6 @@ public class TypeInstruction implements JynxInstruction {
     @Override
     public String toString() {
         return String.format("%s %s",jvmop,type);
-    }
-
-    @Override
-    public boolean needLineNumber() {
-        return true;
     }
 
 }

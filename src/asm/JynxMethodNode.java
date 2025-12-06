@@ -16,6 +16,7 @@ import static com.github.david32768.jynxfree.jvm.StandardAttribute.RuntimeInvisi
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.RuntimeVisibleParameterAnnotations;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.Signature;
 
+import com.github.david32768.jynxfor.node.JynxCodeNode;
 import com.github.david32768.jynxfor.ops.JynxOps;
 import com.github.david32768.jynxfor.scan.JynxScanner;
 import com.github.david32768.jynxfor.scan.Line;
@@ -117,7 +118,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         String classname = checker.getClassName();
         MethodParameters parameters = parametersBuilder.getMethodParameters(lmh, isStatic, classname);
         String2Insn s2a = String2Insn.getInstance(checker, opmap);
-        return JynxCodeHdr.getInstance(js, mnode, parameters, s2a);
+        return JynxCodeHdr.getInstance(js, parameters, s2a);
     }
 
     public LocalMethodHandle getLocalMethodHandle() {
@@ -195,7 +196,10 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         return mnode.visitParameterAnnotation(parameter, classdesc, visible);
     }
 
-    public MethodNode visitEnd() {
+    public MethodNode visitEnd(JynxCodeNode codenode) {
+        if (codenode != null) {
+            codenode.accept(mnode);
+        }
         if (mnode.instructions == null || mnode.instructions.size() == 0) {
             if (!isAbstractOrNative()) {
                 LOG(M338); // "code missing but method is not native or abstract"

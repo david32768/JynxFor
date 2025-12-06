@@ -7,10 +7,10 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
 
 import jynx2asm.JynxLabel;
-import jynx2asm.StackLocals;
 
 public class TableInstruction extends SwitchInstruction {
 
@@ -19,13 +19,23 @@ public class TableInstruction extends SwitchInstruction {
     private final JynxLabel dflt;
     private final Collection<JynxLabel> labels;
 
-    public TableInstruction(int min, int max, JynxLabel dflt, Collection<JynxLabel> labels) {
-        super(JvmOp.asm_tableswitch, minsize(labels.size()));
+    public TableInstruction(int min, int max, JynxLabel dflt, Collection<JynxLabel> labels, Line line) {
+        super(JvmOp.asm_tableswitch, minsize(labels.size()), line);
         assert min <= max;
         this.min = min;
         this.max = max;
         this.dflt = dflt;
         this.labels = labels;
+    }
+
+    @Override
+    public Collection<JynxLabel> labels() {
+        return labels;
+    }
+    
+    @Override
+    public JynxLabel dfltLabel() {
+        return dflt;
     }
 
     private static final int OVERHEAD = 1 + 4 + 4 + 4 ;
@@ -34,12 +44,6 @@ public class TableInstruction extends SwitchInstruction {
         return OVERHEAD + 4*labelct;
     }
     
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        super.adjust(stackLocals);
-        stackLocals.adjustLabelSwitch(dflt,labels);
-    }
-
     @Override
     public void accept(MethodVisitor mv) {
         Label[] asmlabels = labels.stream()

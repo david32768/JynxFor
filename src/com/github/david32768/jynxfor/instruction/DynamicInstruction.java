@@ -6,40 +6,27 @@ import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.MethodVisitor;
 
 import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.scan.Line;
 
-import jynx2asm.StackLocals;
+public class DynamicInstruction extends AbstractInstruction {
 
-public class DynamicInstruction implements JynxInstruction {
-
-    private final JvmOp jvmop;    
     private final ConstantDynamic cd;
     private final Object[] bsmArgs;
 
-    public DynamicInstruction(JvmOp jvmop,  ConstantDynamic  cstdyn) {
-        this.jvmop = jvmop;
+    public DynamicInstruction(JvmOp jvmop,  ConstantDynamic  cstdyn, Line line) {
+        super(jvmop, line);
         this.cd = cstdyn;
         this.bsmArgs = new Object[cd.getBootstrapMethodArgumentCount()];
         Arrays.setAll(bsmArgs, cd::getBootstrapMethodArgument);
     }
 
-    @Override
-    public JvmOp jvmop() {
-        return jvmop;
+    public ConstantDynamic constantDynamic() {
+        return cd;
     }
     
     @Override
     public void accept(MethodVisitor mv) {
         mv.visitInvokeDynamicInsn(cd.getName(), cd.getDescriptor(), cd.getBootstrapMethod(),bsmArgs);
-    }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustStackOperand(cd.getDescriptor());
-    }
-
-    @Override
-    public boolean needLineNumber() {
-        return true;
     }
 
     @Override

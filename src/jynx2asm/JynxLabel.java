@@ -11,6 +11,7 @@ import org.objectweb.asm.Label;
 import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 
+import com.github.david32768.jynxfor.node.JynxCatchNode;
 import com.github.david32768.jynxfor.scan.Line;
 
 import jynx2asm.frame.JynxLabelFrame;
@@ -60,7 +61,8 @@ public class JynxLabel {
     }
 
     public boolean isLessThan(JynxLabel after) {
-        return this.isDefined() && after.isDefined() && this.definedLine().getLinect() < after.definedLine().getLinect();
+        return this.isDefined() && after.isDefined()
+                && this.definedLine().getLinect() < after.definedLine().getLinect();
     }
 
     public boolean isStartBlock() {
@@ -150,10 +152,10 @@ public class JynxLabel {
         return usedList.stream();
     }
     
-    public void visitCatch(List<JynxCatch> catchlist) {
-        for (JynxCatch jcatch:catchlist) {
-            JynxLabel fromref = jcatch.fromLab();
-            JynxLabel toref = jcatch.toLab();
+    public void visitCatch(List<JynxCatchNode> catchlist) {
+        for (JynxCatchNode jcatch:catchlist) {
+            JynxLabel fromref = jcatch.from();
+            JynxLabel toref = jcatch.to();
             if (!this.equals(fromref) ) {
                 updateLocal(fromref.getLocals());
             }
@@ -162,6 +164,7 @@ public class JynxLabel {
     }
     
     public void aliasOf(JynxLabel base) {
+        assert base != this;
         jlf = base.jlf.merge(jlf);
         assert base.isDefined() && isDefined();
         base.usedInCode |= usedInCode;

@@ -61,7 +61,7 @@ public class DynamicSimpleOp implements DynamicOp {
         }
         JynxConstantDynamic jcd = new JynxConstantDynamic(line, checker);
         ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus,bootparms);
-        return new DynamicInstruction(JvmOp.asm_invokedynamic, cd);
+        return new DynamicInstruction(JvmOp.asm_invokedynamic, cd, line);
     }
 
     @Override
