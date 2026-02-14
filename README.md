@@ -32,8 +32,8 @@ Options are:
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  using [ASM](https://asm.ow2.io) version 9.8 as a back end.
  
-It requires Java V24
- and supports all features up to V24 except user attributes.
+It requires Java V25
+ and supports all features up to V25 except user attributes.
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming
@@ -251,3 +251,4 @@ ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 .component x I
 ```
 *	.define_module ; see examples/Java11/module-info.jx
+
