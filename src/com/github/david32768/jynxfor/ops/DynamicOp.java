@@ -1,6 +1,6 @@
 package com.github.david32768.jynxfor.ops;
 
-import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.node.JynxInstructionNode;
 import com.github.david32768.jynxfor.scan.Line;
 
 import com.github.david32768.jynxfree.jvm.Feature;
@@ -9,7 +9,7 @@ import jynx2asm.ClassChecker;
 
 public interface DynamicOp extends JynxOp {
     
-    public JynxInstruction getInstruction(Line line, ClassChecker checker);
+    public JynxInstructionNode getInstruction(Line line, ClassChecker checker);
 
     public default Feature feature(){
         return Feature.invokeDynamic;

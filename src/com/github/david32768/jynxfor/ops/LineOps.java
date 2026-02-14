@@ -2,21 +2,14 @@ package com.github.david32768.jynxfor.ops;
 
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfor.scan.TokenArray;
+import com.github.david32768.jynxfree.jynx.LogUnexpectedEnumValueException;
 
-import com.github.david32768.jynxfree.jynx.NameDesc;
+import com.github.david32768.jynxfree.jynx.ReservedWord;
+import com.github.david32768.jynxfree.jynx.StringUtil;
 
-import jynx2asm.LabelStack;
 
 public enum LineOps implements LineOp {
-
-    mac_label,
-
-    lab_peek,
-    lab_peek_if,
-    lab_peek_else,
-    lab_push,
-    lab_push_if,
-    lab_pop,
 
     line_num,
     
@@ -24,6 +17,7 @@ public enum LineOps implements LineOp {
     tok_skipall,
     tok_swap,
     tok_dup,
+    tok_multi,
     tok_print, // for debugging
     
     ;    
@@ -31,28 +25,13 @@ public enum LineOps implements LineOp {
     private LineOps() {}
 
     @Override
-    public void adjustLine(Line line, int macrolevel, MacroOp macroop, LabelStack labelStack) {
-        lineop(line, macrolevel, labelStack);
+    public void adjustLine(CurrentState state) {
+        lineop(state.line());
     }
 
-    private final static String ELSE = "ELSE";
-
-    private void lineop(Line line, int macrolevel,LabelStack labelStack) {
+    private void lineop(Line line) {
         Token token;
         switch(this) {
-            case mac_label -> {
-                String labstr = String.format("%cL%dML%d",NameDesc.GENERATED_LABEL_MARKER,line.getLinect(),macrolevel);
-                Token maclabel  = Token.getInstance(labstr);
-                line.insert(maclabel);
-            }
-
-            case lab_pop -> line.insert(labelStack.pop());
-            case lab_peek -> line.insert(labelStack.peek());
-            case lab_peek_else -> line.insert(labelStack.peek().transform(s->s + ELSE));
-            case lab_peek_if -> line.insert(labelStack.peekIf());
-            case lab_push -> labelStack.push(line.nextToken());
-            case lab_push_if -> labelStack.pushIf(line.nextToken());
-
             case line_num -> line.insert("" + line.getLinect());
                 
             case tok_skip -> line.nextToken();
@@ -68,7 +47,16 @@ public enum LineOps implements LineOp {
                 line.insert(first);
                 line.insert(second);
             }
-            default -> throw new EnumConstantNotPresentException(this.getClass(),this.name());
+            case tok_multi -> {
+                Token next = line.peekToken().checkNotEnd();
+                if (next.is(ReservedWord.dot_array)) {
+                    String str = TokenArray.multiLineString(line);
+                    str = StringUtil.enquote(str);
+                    line.nextToken();
+                    line.insert(str);
+                }
+            }
+            default -> throw new LogUnexpectedEnumValueException(this);
         }
     }
 

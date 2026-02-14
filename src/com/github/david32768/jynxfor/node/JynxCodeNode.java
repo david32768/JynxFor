@@ -5,7 +5,6 @@ import java.util.List;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
-import com.github.david32768.jynxfor.instruction.JynxInstruction;
 import com.github.david32768.jynxfor.instruction.LabelInstruction;
 
 public class JynxCodeNode {
@@ -30,8 +29,8 @@ public class JynxCodeNode {
         this.maxStack = maxStack;
     }
     
-    public JynxInstruction getInstruction(int index) {
-        return instructionList.get(index).instruction();
+    public JynxInstructionNode getInstruction(int index) {
+        return instructionList.get(index);
     }
     
     public void accept(MethodVisitor mv) {
@@ -39,11 +38,11 @@ public class JynxCodeNode {
         for (var jcatch : catches) {
             jcatch.accept(mv);
         }
-        Label startlabel = ((LabelInstruction)instructionList.getFirst().instruction()).jynxlab().asmlabel();
+        Label startlabel = ((LabelInstruction)instructionList.getFirst()).jynxlab().asmlabel();
         for (var instruction : instructionList) {
-            instruction.accept(mv);
+            JynxInstructionNode.accept(instruction, mv);
         }
-        Label endlabel = ((LabelInstruction)instructionList.getLast().instruction()).jynxlab().asmlabel();
+        Label endlabel = ((LabelInstruction)instructionList.getLast()).jynxlab().asmlabel();
         for (var jvar : varList) {
             jvar.accept(mv, startlabel, endlabel);
         }

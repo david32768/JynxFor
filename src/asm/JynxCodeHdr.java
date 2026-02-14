@@ -19,12 +19,14 @@ import static com.github.david32768.jynxfor.my.Message.*;
 import static com.github.david32768.jynxfree.jynx.Global.*;
 import static com.github.david32768.jynxfree.jynx.GlobalOption.*;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
+
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.Code;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.StackMapTable;
 
+import com.github.david32768.jynxfor.code.JynxCodeNodeBuilder;
+
 import com.github.david32768.jynxfor.node.JynxCatchNode;
 import com.github.david32768.jynxfor.node.JynxCodeNode;
-import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.ops.JvmOp;
 import com.github.david32768.jynxfor.scan.JynxScanner;
 import com.github.david32768.jynxfor.scan.Line;
@@ -41,6 +43,7 @@ import com.github.david32768.jynxfree.jynx.NameDesc;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
 
 import jynx2asm.*;
+
 import jynx2asm.frame.MethodParameters;
 
 public class JynxCodeHdr implements ContextDependent {
@@ -77,7 +80,7 @@ public class JynxCodeHdr implements ContextDependent {
         
         CHECK_SUPPORTS(Code);
         var codeBuilder = new JynxCodeNodeBuilder();
-        StackLocals stackLocals = StackLocals.getInstance(parameters, s2a.getLabelMap(), codeBuilder);
+        StackLocals stackLocals = StackLocals.getInstance(parameters, s2a.getLabelMap());
         return new JynxCodeHdr(js, stackLocals, parameters.getInitFrame(), s2a, codeBuilder);
     }
 
@@ -184,15 +187,15 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     private void visitInsn(Line line) {
-        InstList instlist = new InstList(stackLocals,line,options);
+        InstList instlist = new InstList(codeBuilder, stackLocals,line,options);
         s2a.getInsts(instlist);
-        instlist.accept(codeBuilder);
+        instlist.visitEnd();
     }
     
     private void visitLineNumber(Line line) {
-        InstList instlist = new InstList(stackLocals,line,options);
+        InstList instlist = new InstList(codeBuilder, stackLocals,line,options);
         s2a.add(JvmOp.xxx_line, instlist);
-        instlist.accept(codeBuilder);
+        instlist.visitEnd();
     }
 
     private Object getAsmFrameType(FrameType ft,Line line) {
@@ -292,7 +295,7 @@ public class JynxCodeHdr implements ContextDependent {
     }
     
     public JynxCodeNode visitEnd() {
-        s2a.visitEnd();
+        s2a.visitEnd(codeBuilder);
         stackLocals.visitEnd();
         labelmap.checkCatch();
         labelmap.stream()

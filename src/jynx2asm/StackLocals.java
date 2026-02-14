@@ -24,14 +24,12 @@ import static com.github.david32768.jynxfree.jynx.GlobalOption.WARN_UNNECESSARY_
 import com.github.david32768.jynxfor.instruction.*;
 
 import com.github.david32768.jynxfor.node.JynxCatchNode;
-import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
+import com.github.david32768.jynxfor.node.JynxInstructionNode;
 import com.github.david32768.jynxfor.node.JynxVarNode;
 import com.github.david32768.jynxfor.ops.JvmOp;
 import com.github.david32768.jynxfor.scan.Line;
-import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jvm.Feature;
-import com.github.david32768.jynxfree.jvm.OpArg;
 import com.github.david32768.jynxfree.jynx.Directive;
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 import com.github.david32768.jynxfree.jynx.LogAssertionError;
@@ -97,10 +95,9 @@ public class StackLocals {
         this.maxLength = 0;
     }
     
-    public static StackLocals getInstance(MethodParameters parameters,
-            JynxLabelMap labelmap, JynxCodeNodeBuilder codeBuilder) {
+    public static StackLocals getInstance(MethodParameters parameters, JynxLabelMap labelmap) {
         OperandStack os = OperandStack.getInstance();
-        LocalVars lv = LocalVars.getInstance(parameters, codeBuilder);
+        LocalVars lv = LocalVars.getInstance(parameters);
         return new StackLocals(lv, os, labelmap, parameters.getReturnOp());
     }
 
@@ -144,14 +141,9 @@ public class StackLocals {
         stack.checkCatch(usingref);
     }
     
-    @Deprecated
-    public boolean addNop(JynxInstruction inst) {
-        if (inst instanceof LabelInstruction labinst) {
-            var target = labinst.jynxlab();
-            return labelmap.isEndTry(target) && lastop != null
-                    && lastop.args() == OpArg.arg_var && lastop.isStoreVar();
-        }
-        return false;
+    public boolean isEndAllTry(LabelInstruction labinst) {
+        var target = labinst.jynxlab();
+        return labelmap.isEndAllTry(target);
     }
 
     private void visitLineNumber(LineInstruction lineinst, Line line) {
@@ -163,6 +155,11 @@ public class StackLocals {
     }
     
     public void visitFrame(List<Object> stackarr, List<Object> localarr, Line line) {
+        if (OPTION(GlobalOption.SYMBOLIC_LOCAL)) {
+            // "stackmap locals have been ignored as %s specified"
+            LOG(M112, GlobalOption.SYMBOLIC_LOCAL);
+            return;
+        }
         if (lastLab.isPresent()) {
             labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
@@ -178,7 +175,7 @@ public class StackLocals {
         }
     }
     
-    private void checkMethodLength(JynxInstruction in) {
+    private void checkMethodLength(JynxInstructionNode in) {
         int minbefore = minLength;
         int maxbefore = maxLength;
         minLength += in.minLength();
@@ -193,7 +190,7 @@ public class StackLocals {
         }
     }
     
-    public boolean visitInsn(JynxInstruction in, Line line) {
+    public boolean visitInsn(JynxInstructionNode in, Line line) {
         if (in == null) {
             return false;
         }
@@ -239,14 +236,13 @@ public class StackLocals {
         return true;
     }
 
-    private void adjust(JynxInstruction in) {
+    private void adjust(JynxInstructionNode in) {
         JvmOp jvmop = in.jvmop();
         switch (in) {
             case DynamicInstruction insn -> adjustStackOperand(insn.constantDynamic().getDescriptor());
             case FieldInstruction insn -> adjustField(insn);
             case IncrInstruction insn -> {
-                int varnum = adjustIncr(insn.varToken());
-                insn.setVarnum(varnum);
+                adjustIncr(insn.varnum());
             }
             case JumpInstruction insn -> {
                 adjustStack(jvmop);        
@@ -269,8 +265,7 @@ public class StackLocals {
                 adjustLabelSwitch(insn.dfltLabel(), insn.labels());
             }
             case VarInstruction insn -> {
-                int varnum = adjustLoadStore(jvmop, insn.varToken());
-                insn.setVarnum(varnum);
+                adjustLoadStore(jvmop, insn.varnum());
             }
             default -> adjustStack(jvmop);
         }
@@ -361,7 +356,6 @@ public class StackLocals {
     
     public void visitEnd() {
         locals.visitEnd();
-        boolean ok = returns || hasThrow;
         if (!returns) {
             LOG(M196,returnOp); // "no %s instruction found"
             if (!hasThrow) {
@@ -428,34 +422,29 @@ public class StackLocals {
         stack.adjustInvoke(jvmop, mh);
     }
     
-    private int adjustIncr(Token vartoken) {
+    private void adjustIncr(int num) {
         char ctype = 'I';
-        int var = locals.loadVarNumber(vartoken);
-        FrameElement fe = locals.loadType(ctype,var);
+        FrameElement fe = locals.loadType(ctype, num);
         for (JynxLabel lab:activeLabels) {
-            lab.load(fe,var);
+            lab.load(fe,num);
         }
-        return var;
     }
     
-    private int adjustLoad(char ctype, Token vartoken) {
-        int var = locals.loadVarNumber(vartoken);
-        FrameElement fe = locals.loadType(ctype,var);
+    private void adjustLoad(char ctype, int num) {
+        FrameElement fe = locals.loadType(ctype, num);
         for (JynxLabel lab:activeLabels) {
-            lab.load(fe,var);
+            lab.load(fe,num);
         }
-        stack.load(fe, var);
-        return var;
+        stack.load(fe, num);
     }
     
-    private int adjustStore(char ctype, Token vartoken) {
+    private void adjustStore(char ctype, int num) {
         FrameElement fe = stack.storeType(ctype);
-        int var = locals.storeFrameElement(fe,vartoken);
+        locals.storeFrameElement(fe, num);
         for (JynxLabel lab:activeLabels) {
-            lab.store(fe,var);
+            lab.store(fe, num);
         }
         updateUsing();
-        return var;
     }
 
     private void updateUsing() {
@@ -467,12 +456,12 @@ public class StackLocals {
         }        
     }
     
-    private int adjustLoadStore(JvmOp jop, Token vartoken) {
+    private void adjustLoadStore(JvmOp jop, int num) {
         char ctype = jop.vartype();
         if (jop.isStoreVar()) {
-            return adjustStore(ctype, vartoken);
+            adjustStore(ctype, num);
         } else {
-            return adjustLoad(ctype, vartoken);
+            adjustLoad(ctype, num);
         }
     }
     

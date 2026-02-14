@@ -81,6 +81,12 @@ public class Token {
         return getInstance(str);
     }
     
+    public Token enquote() {
+        checkNotEnd();
+        String str = StringUtil.enquote(token);
+        return getInstance(str);
+    }
+    
     public String asString() {
         checkNotEnd();
         return token;

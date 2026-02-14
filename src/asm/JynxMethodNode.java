@@ -16,6 +16,7 @@ import static com.github.david32768.jynxfree.jvm.StandardAttribute.RuntimeInvisi
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.RuntimeVisibleParameterAnnotations;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.Signature;
 
+import com.github.david32768.jynxfor.code.VarTranslator;
 import com.github.david32768.jynxfor.node.JynxCodeNode;
 import com.github.david32768.jynxfor.ops.JynxOps;
 import com.github.david32768.jynxfor.scan.JynxScanner;
@@ -117,7 +118,8 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         boolean isStatic = is(AccessFlag.acc_static);
         String classname = checker.getClassName();
         MethodParameters parameters = parametersBuilder.getMethodParameters(lmh, isStatic, classname);
-        String2Insn s2a = String2Insn.getInstance(checker, opmap);
+        var vartrans = VarTranslator.of(parameters);
+        String2Insn s2a = String2Insn.getInstance(checker, opmap, vartrans);
         return JynxCodeHdr.getInstance(js, parameters, s2a);
     }
 

@@ -1,46 +1,34 @@
 package com.github.david32768.jynxfor.ops;
 
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.github.david32768.jynxfor.ops.ExtendedOps.*;
 import static com.github.david32768.jynxfor.ops.JvmOp.*;
 
 import static com.github.david32768.jynxfor.my.Message.M278;
-import static com.github.david32768.jynxfor.my.Message.M282;
+import static com.github.david32768.jynxfor.my.Message.M355;
 
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfor.scan.Token;
+import com.github.david32768.jynxfree.classfile.SmallOpcodeType;
+import com.github.david32768.jynxfree.jynx.Global;
 
-import com.github.david32768.jynxfree.jvm.NumType;
-import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
-
-import jynx2asm.FrameElement;
-import jynx2asm.InstList;
 
 public enum SelectOps implements SelectOp {
     
-    opc_ildc(Type.ILDC,
-            asm_iconst_0,asm_iconst_1,asm_iconst_2,asm_iconst_3,asm_iconst_4,asm_iconst_5,
-            asm_iconst_m1,asm_bipush,asm_sipush,asm_ldc),
-    opc_lldc(Type.LLDC,
-            asm_lconst_0,asm_lconst_1,ext_lconst_2,ext_lconst_3,ext_lconst_4,ext_lconst_5,
-            ext_lconst_m1,ext_blpush,ext_slpush,opc_ldc2_w),
-    opc_fldc(Type.FLDC,asm_fconst_0,asm_fconst_1,asm_fconst_2,asm_ldc,xxx_fraw),
-    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,opc_ldc2_w,xxx_draw),
+    opc_ildc(SelectOps::getIldc),
+    opc_lldc(SelectOps::getLldc),
+    opc_fldc(SelectOps::getFldc),
+    opc_dldc(SelectOps::getDldc),
 
-    xxx_xreturn(Type.RETURN),
-    
-    xxx_xload(Type.LOCAL,asm_iload,asm_lload,asm_fload,asm_dload,asm_aload),
-    xxx_xstore(Type.STACK,asm_istore,asm_lstore,asm_fstore,asm_dstore,asm_astore),
-    xxx_x2z(Type.STACK,ext_i2z,ext_l2z,ext_f2z,ext_d2z,ext_a2z),
     ;
         
-    private final Select selector;
+    private final Function<CurrentState, JynxOp> fn;
 
-    private SelectOps(SelectOps.Type type, JynxOp... ops) {
-        this.selector = new Select(type, ops);
+    private SelectOps(Function<CurrentState, JynxOp>  fn) {
+        this.fn = fn;
     }
 
     public static Map<String,JynxOp> getMacros() {
@@ -52,8 +40,8 @@ public enum SelectOps implements SelectOp {
     }
     
     @Override
-    public JynxOp getOp(Line line, InstList instlist) {
-        return selector.getOp(line,instlist);
+    public JynxOp getOp(CurrentState state) {
+        return fn.apply(state);
     }
 
     @Override
@@ -61,232 +49,164 @@ public enum SelectOps implements SelectOp {
         return name().substring(4);
     }
 
-    private static enum Type {
-        STACK_LENGTH,
-        ILDC,
-        LLDC,
-        FLDC,
-        DLDC,
-        STACK,
-        LOCAL,
-        RETURN,
-        ;
+    private static JynxOp getIldc(CurrentState state) {
+        Line line = state.line();
+        Token token = line.nextToken();
+        int ival = token.asInt();
+        JvmOp op = JvmOp.of(SmallOpcodeType.opFor(ival));
+        if (!op.isImmediate()) {
+            line.insert(Integer.toString(ival));
+        }
+        return op;
     }
 
-    public static SelectOp of12(JynxOp oplen1, JynxOp oplen2) {
-        return new Select(Type.STACK_LENGTH, oplen1, oplen2);
+    private static JynxOp getLldc(CurrentState state) {
+        Line line = state.line();
+        Token token = line.nextToken();
+        long lval = token.asLong();
+        var optiop = SmallOpcodeType.intOpFor(lval);
+        if (optiop.isPresent()) {
+            JvmOp iop = JvmOp.of(optiop.get());
+            if (!iop.isImmediate()) {
+                line.insert(Integer.toString((int)lval));
+            }
+            return MacroOp.of(iop, asm_i2l);
+        } else {
+            JvmOp lop = JvmOp.of(SmallOpcodeType.opFor(lval));
+            if (lop.isImmediate()) {
+                return lop;
+            }
+            line.insert(Long.toString(lval) + 'L');
+            return lop;
+        }
     }
 
-    public static SelectOp stackILFDA(JynxOp iop, JynxOp jop, JynxOp fop, JynxOp dop, JynxOp aop) {
-        return new Select(Type.STACK, iop, jop, fop, dop, aop);
+    private final static int F_NAN_PREFIX = 0x7f800000;
+    private final static int F_NAN_CANONICAL = Float.floatToRawIntBits(Float.NaN);
+    private final static int F_NAN_LIMIT = 1 << 23;
+    private final static int JAVA_F_NAN_SUFFIX = F_NAN_CANONICAL & ~F_NAN_PREFIX;
+    private final static CallOp inv_iasf = CallOp.of(Float.class,"intBitsToFloat","(I)F");
+
+    private static JynxOp getFldc(CurrentState state) {
+        Line line = state.line();
+        Token token = line.nextToken();
+        String str = token.toString();
+        if (str.startsWith("nan") || str.startsWith("inf")) {
+            str = "+" + str;
+        }
+        if (str.startsWith("-nan")  || str.startsWith("+nan")) {
+            int num = (int)nanSuffix(str, F_NAN_LIMIT, JAVA_F_NAN_SUFFIX);
+            num |= F_NAN_PREFIX;
+            if (str.charAt(0) == '-') {
+                num |= 1 << 31; // set sign bit
+            }
+            long lnum = Integer.toUnsignedLong(num);
+            line.insert("0x" + Long.toHexString(lnum));
+            return MacroOp.of(asm_ldc, inv_iasf);
+        }
+        if (str.equals("+inf") || str.equals("-inf")) {
+            line.insert(str.replace("inf","InfinityF"));
+            return asm_ldc;
+        }
+        float fval = token.asFloat();
+        var optiop = SmallOpcodeType.intOpFor(fval);
+        if (optiop.isPresent()) {
+            JvmOp iop = JvmOp.of(optiop.get());
+            if (!iop.isImmediate()) {
+                line.insert(Integer.toString((int)fval));
+            }
+            return MacroOp.of(iop, asm_i2f);
+        } else {
+            JvmOp fop = JvmOp.of(SmallOpcodeType.opFor(fval));
+            if (fop.isImmediate()) {
+                return fop;
+            }
+            if (Float.isNaN(fval)) {
+                line.insert("+NaNF"); // ldc requires + sign
+            } else if (Float.isInfinite(fval) && fval > 0) {
+                line.insert("+InfinityF");  // ldc requires + sign
+            } else  {
+                line.insert(Float.toHexString(fval) + 'F');
+            }
+            return fop;
+        }
     }
 
-    private static class Select implements SelectOp {
+    private final static long D_NAN_PREFIX = 0x7ff0000000000000L;
+    private final static long D_NAN_CANONICAL = Double.doubleToRawLongBits(Double.NaN);
+    private final static long D_NAN_LIMIT = 1L << 52;
+    private final static long JAVA_D_NAN_SUFFIX = D_NAN_CANONICAL & ~D_NAN_PREFIX;
+    private final static CallOp inv_lasd = CallOp.of(Double.class,"longBitsToDouble","(J)D");
 
-        private final Type type;
-        private final JynxOp[] ops;
-
-        private Select(SelectOps.Type type, JynxOp... ops) {
-            this.type = type;
-            this.ops = ops;
+    private static JynxOp getDldc(CurrentState state) {
+        Line line = state.line();
+        Token token = line.nextToken();
+        String str = token.toString();
+        if (str.startsWith("nan") || str.startsWith("inf")) {
+            str = "+" + str;
         }
-
-        @Override
-        public JynxOp getOp(Line line,InstList instlist) {
-            int index;
-            switch (type) {
-                case RETURN -> {
-                    return instlist.getReturnOp();
-                }
-                case STACK_LENGTH -> index = getLength(line,instlist);
-                case STACK -> index = getTypeIndex(instlist.peekTOS());
-                case LOCAL -> index = getLocal(line,instlist);
-                case ILDC -> index = getIldc(line,instlist);
-                case LLDC -> index = getLldc(line,instlist);
-                case FLDC -> index = getFldc(line,instlist);
-                case DLDC -> index = getDldc(line,instlist);
-                default -> throw new EnumConstantNotPresentException(type.getClass(), type.name());
+        if (str.startsWith("-nan")  || str.startsWith("+nan")) {
+            long num = nanSuffix(str, D_NAN_LIMIT, JAVA_D_NAN_SUFFIX);
+            num |= D_NAN_PREFIX;
+            if (str.charAt(0) == '-') {
+                num |= 1L << 63; // set sign bit 
             }
-            if (index < 0 || index >= ops.length) {
-                throw new AssertionError();
-            }
-            return ops[index];
+            line.insert("0x" + Long.toHexString(num) + "L");
+            return MacroOp.of(opc_ldc2_w, inv_lasd);
         }
-
-        private int getLength(Line line,InstList instlist) {
-            FrameElement fe = instlist.peekTOS();
-            return fe.slots() - 1;
+        if (str.equals("+inf") || str.equals("-inf")) {
+            line.insert(str.replace("inf","InfinityF"));
+            return opc_ldc2_w;
         }
-
-        private final static String ILFDA = "ilfda";
-        
-        private int getTypeIndex(FrameElement fe) {
-            char fetype = fe.instLetter();
-            int index = ILFDA.indexOf(fetype);
-            if (index < 0 || index >= ops.length) {
-                String valid = ILFDA.substring(0,Math.min(ILFDA.length(),ops.length));
-                // "instruction type '%c' (%s) of element at top of stack is not one of %s"
-                throw new LogIllegalArgumentException(M282,fetype,fe,valid);
+        double dval = token.asDouble();
+        var optiop = SmallOpcodeType.intOpFor(dval);
+        if (optiop.isPresent()) {
+            JvmOp iop = JvmOp.of(optiop.get());
+            if (!iop.isImmediate()) {
+                line.insert(Integer.toString((int)dval));
             }
-            assert ops[index].toString().charAt(0) == fetype:
-                    String.format("%s %c", ops[index],fetype);
-            return index;
-        }
-        
-        private int getLocal(Line line, InstList instlist) {
-            Token token = line.peekToken();
-            return getTypeIndex(instlist.peekVarNum(token));
-        }
-        
-        private int rangeType(long lval) {
-            if (lval >= 0 && lval <= 5) {
-                return (int)lval;
+            return MacroOp.of(iop, asm_i2d);
+        } else {
+            JvmOp dop = JvmOp.of(SmallOpcodeType.opFor(dval));
+            if (dop.isImmediate()) {
+                return dop;
             }
-            if (lval == -1) {
-                return 6;
-            }
-            if (NumType.t_byte.isInRange(lval)) {
-                return 7;
-            }
-            if (NumType.t_short.isInRange(lval)) {
-                return 8;
-            } 
-            return 9;
-        }
-        
-        private int getIldc(Line line,InstList instlist) {
-            Token token = line.nextToken();
-            int ival = token.asInt();
-            int rval = rangeType(ival);
-            if (rval > 6) {
-                line.insert(Integer.toString(ival));
-            }
-            return rval;
-        }
-
-        private int getLldc(Line line,InstList instlist) {
-            Token token = line.nextToken();
-            long lval = token.asLong();
-            int rval = rangeType(lval);
-            if (rval <= 6) {
-                return rval;
-            }
-            if (rval == 9) {
-                line.insert(Long.toString(lval) + 'L');
+            if (Double.isNaN(dval)) {
+                line.insert("+NaN"); // ldc requires + sign
+            } else if (Double.isInfinite(dval) && dval > 0) {
+                line.insert("+Infinity"); // ldc requires + sign
             } else {
-                line.insert(Long.toString(lval));
+                line.insert(Double.toHexString(dval));
             }
-            return rval;
+            return dop;
         }
-
-        private final static int F_NAN_PREFIX = 0x7f800000;
-        private final static int F_NAN_CANONICAL = Float.floatToRawIntBits(Float.NaN);
-        private final static int F_NAN_LIMIT = 1 << 23;
-        
-        private int getFldc(Line line,InstList instlist) {
-            Token token = line.nextToken();
-            String str = token.toString();
-            if (str.equals("-nan") || str.equals("nan") || str.equals("+nan")) {
-                str += ":" + Integer.toHexString(F_NAN_CANONICAL & ~F_NAN_PREFIX);
-            }
-            if (str.startsWith("nan:") || str.startsWith("-nan:")  || str.startsWith("+nan:")) {
-                int num = Integer.valueOf(str.substring(str.indexOf(':') + 1),16);
-                if (num <= 0 || num >= F_NAN_LIMIT) {
-                    // "NaN type %#x is not in (0,%#x)"
-                    throw new LogIllegalArgumentException(M278, num, F_NAN_LIMIT);
-                }
-                num |= F_NAN_PREFIX;
-                if (str.charAt(0) == '-') {
-                    num |= 1 << 31; // set sign bit
-                }
-                line.insert("0x" + Integer.toHexString(num));
-                assert ops[4] == ExtendedOps.xxx_fraw;
-                return 4;
-            }
-            if (str.equals("inf") || str.equals("+inf") || str.equals("-inf")) {
-                if (str.equals("inf")) {
-                    str = "+" + str;
-                }
-                line.insert(str.replace("inf","InfinityF"));
-                assert ops[3] == asm_ldc;
-                return 3;
-            }
-            float fval = token.asFloat();
-            if (Float.compare(fval, +0.0F) == 0) { // NOT -0/0F
-                assert ops[0] == asm_fconst_0;
-                return 0;
-            } else if (fval == 1.0f) {
-                assert ops[1] == asm_fconst_1;
-                return 1;
-            } else if (fval == 2.0f) {
-                assert ops[2] == asm_fconst_2;
-                return 2;
-            } else {
-                if (Float.isNaN(fval)) {
-                    line.insert("+NaNF"); // ldc requires + sign
-                } else if (Float.isInfinite(fval) && fval > 0) {
-                    line.insert("+InfinityF");  // ldc requires + sign
-                } else  {
-                    line.insert(Float.toHexString(fval) + 'F');
-                }
-                assert ops[3] == asm_ldc;
-                return 3;
-            }
-        }
-
-        private final static long D_NAN_PREFIX = 0x7ff0000000000000L;
-        private final static long D_NAN_CANONICAL = Double.doubleToRawLongBits(Double.NaN);
-        private final static long D_NAN_LIMIT = 1L << 52;
-        
-        private int getDldc(Line line,InstList instlist) {
-            Token token = line.nextToken();
-            String str = token.toString();
-            if (str.equals("-nan") || str.equals("nan") || str.equals("+nan")) {
-                str += ":" + Long.toHexString(D_NAN_CANONICAL & ~D_NAN_PREFIX);
-            }
-            if (str.startsWith("nan:") || str.startsWith("-nan:")  || str.startsWith("+nan:")) {
-                String hexstr = str.substring(str.indexOf(':') + 1);
-                long num = Long.valueOf(hexstr,16);
-                if (num <= 0 || num >= D_NAN_LIMIT) {
-                    // "NaN type %#x is not in (0,%#x)"
-                    throw new LogIllegalArgumentException(M278, num, D_NAN_LIMIT);
-                }
-                num |= D_NAN_PREFIX;
-                if (str.charAt(0) == '-') {
-                    num |= 1L << 63; // set sign bit 
-                }
-                line.insert("0x" + Long.toHexString(num) + "L");
-                assert ops[3] == ExtendedOps.xxx_draw;
-                return 3;
-            }
-            if (str.equals("inf") || str.equals("+inf") || str.equals("-inf")) {
-                if (str.equals("inf")) {
-                    str = "+" + str;
-                }
-                line.insert(str.replace("inf","InfinityF"));
-                assert ops[2] == opc_ldc2_w;
-                return 2;
-            }
-            double dval = token.asDouble();
-            if (Double.compare(dval,0.0) == 0) { // Not -0.0
-                assert ops[0] == asm_dconst_0;
-                return 0;
-            } else if (dval == 1.0) {
-                assert ops[1] == asm_dconst_1;
-                return 1;
-            } else {
-                if (Double.isNaN(dval)) {
-                    line.insert("+NaN"); // ldc requires + sign
-                } else if (Double.isInfinite(dval) && dval > 0) {
-                    line.insert("+Infinity"); // ldc requires + sign
-                } else {
-                    line.insert(Double.toHexString(dval));
-                }
-                assert ops[2] == opc_ldc2_w;
-                return 2;
-            }
-        }
-    
     }
     
+    private static long nanSuffix(String str , long limit, long defaultnum) {
+        assert str.startsWith("-nan") || str.startsWith("+nan");
+        if (str.length() == 4) {
+            return defaultnum;
+        }
+        if (str.charAt(4) != ':') {
+            // "%s is not a valid nan suffix"
+            Global.LOG(M355,str.substring(4));
+            return defaultnum;
+        }
+        String hexstr = str.substring(5);
+        long num;
+        try {
+            num = Long.parseLong(hexstr, 16);
+        } catch(NumberFormatException ex) {
+            // "%s is not a valid nan suffix"
+            Global.LOG(M355,str.substring(4));
+            return defaultnum;
+        }
+        if (num <= 0 || num >= limit) {
+            // "NaN type %#x is not in (0,%#x)"
+            Global.LOG(M278, num, limit);
+            num = defaultnum;
+        }
+        return num;
+    }
 }
+

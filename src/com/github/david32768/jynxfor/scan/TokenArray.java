@@ -76,6 +76,11 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
     }
 
     public static void debugString(StringBuilder sb, Line line) {
+        sb.append(multiLineString(line));
+    }
+    
+    public static String multiLineString(Line line) {
+        StringBuilder sb = new StringBuilder();
         try (TokenArray array = line.getTokenArray()) {
             while(true) {
                 Token token = array.firstToken();
@@ -87,6 +92,7 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
                 array.noMoreTokens();
             }
         }
+        return sb.toString();
     }
 
 }

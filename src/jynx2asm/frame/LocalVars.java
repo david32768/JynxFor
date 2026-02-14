@@ -6,13 +6,8 @@ import java.util.Optional;
 import static com.github.david32768.jynxfor.my.Message.*;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
-import static com.github.david32768.jynxfree.jynx.Global.OPTION;
-
-import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.scan.Line;
-import com.github.david32768.jynxfor.scan.Token;
 
-import com.github.david32768.jynxfree.jynx.GlobalOption;
 
 import jynx2asm.FrameElement;
 import jynx2asm.JynxLabel;
@@ -39,11 +34,7 @@ public class LocalVars {
         varAccess.completeInit(this.parmsz);
     }
 
-    public static LocalVars getInstance(MethodParameters parameters, JynxCodeNodeBuilder codeBuilder) {
-        boolean symbolic = OPTION(GlobalOption.SYMBOLIC_LOCAL);
-        if(symbolic) {
-            return SymbolicVars.getInstance(parameters, codeBuilder);
-        }
+    public static LocalVars getInstance(MethodParameters parameters) {
         return new LocalVars(parameters);
     }
 
@@ -55,16 +46,7 @@ public class LocalVars {
         localsz.setLimit(num, line);        
     }
 
-    public int loadVarNumber(Token token) {
-        return token.asUnsignedShort();
-    }
-    
-    protected int storeVarNumber(Token token, FrameElement fe) {
-        return token.asUnsignedShort();
-    }
-    
-    public FrameElement peekVarNumber(Token token) {
-        int num = loadVarNumber(token);
+    public FrameElement peekVarNumber(int num) {
         return locals.getUnchecked(num);
     }
 
@@ -108,8 +90,7 @@ public class LocalVars {
         localsz.adjust(locals.size());
     }
     
-    public int storeFrameElement(FrameElement fe, Token vartoken) {
-        int num = storeVarNumber(vartoken, fe);
+    public int storeFrameElement(FrameElement fe, int num) {
         store(num,fe);
         if (fe != FrameElement.UNUSED) {
             varAccess.setWrite(num, fe);

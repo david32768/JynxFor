@@ -2,6 +2,7 @@ package com.github.david32768.jynxfor.ops;
 
 import com.github.david32768.jynxfree.jvm.JvmVersionRange;
 
+@FunctionalInterface
 public interface MacroOp extends JynxOp {
 
     public JynxOp[] getJynxOps();

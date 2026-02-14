@@ -58,6 +58,10 @@ public class JynxCatchNode implements LabelRange {
         return usingLab;
     }
 
+    public String exception() {
+        return exception;
+    }
+    
     public LabelRecord labels() {
         return new LabelRecord(fromLab, toLab, usingLab);
     }

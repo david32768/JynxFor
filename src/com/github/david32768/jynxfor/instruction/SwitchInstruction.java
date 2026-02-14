@@ -17,6 +17,7 @@ import static com.github.david32768.jynxfree.jvm.Constants.MAX_CODE;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.ReservedWord.res_default;
 
+import com.github.david32768.jynxfor.node.JynxInstructionNode;
 import com.github.david32768.jynxfor.ops.JvmOp;
 import com.github.david32768.jynxfor.scan.Line;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
@@ -66,7 +67,7 @@ public abstract class SwitchInstruction extends AbstractInstruction {
         return maxPadding + unpaddedLength;
     }
 
-    public static JynxInstruction getInstance(JvmOp jvmop, JynxLabel dflt,
+    public static JynxInstructionNode getInstance(JvmOp jvmop, JynxLabel dflt,
             SortedMap<Integer,JynxLabel> swmap, Line line) {
         if (swmap.isEmpty()) {
             if (jvmop == asm_tableswitch) {
@@ -112,7 +113,7 @@ public abstract class SwitchInstruction extends AbstractInstruction {
         return new LookupInstruction(dflt,swmap,line);
     }
     
-    private static JynxInstruction lookupToTableSwitch(int min, int max,
+    private static JynxInstructionNode lookupToTableSwitch(int min, int max,
             JynxLabel dflt,SortedMap<Integer,JynxLabel> swmap, Line line) {
         assert max >= min;
         List<JynxLabel> labellist = new ArrayList<>();

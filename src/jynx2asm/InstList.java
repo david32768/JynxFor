@@ -1,9 +1,7 @@
 package jynx2asm;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.List;
 
 import static com.github.david32768.jynxfree.jynx.ReservedWord.*;
 
@@ -16,20 +14,17 @@ import static com.github.david32768.jynxfor.my.Message.M990;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 import static com.github.david32768.jynxfree.jynx.Global.OPTION;
 
-import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.code.JynxCodeNodeBuilder;
 import com.github.david32768.jynxfor.instruction.LineInstruction;
-import com.github.david32768.jynxfor.instruction.OpcodeInstruction;
-import com.github.david32768.jynxfor.node.JynxCodeNodeBuilder;
-import com.github.david32768.jynxfor.ops.JvmOp;
+import com.github.david32768.jynxfor.node.JynxInstructionNode;
 import com.github.david32768.jynxfor.scan.Line;
-import com.github.david32768.jynxfor.scan.Token;
 
 import com.github.david32768.jynxfree.jynx.GlobalOption;
 import com.github.david32768.jynxfree.jynx.ReservedWord;
 
 public class InstList {
 
-    private final List<JynxInstruction> instructions;
+    private final JynxCodeNodeBuilder codeNode;
     private final StackLocals stackLocals;
     private final Line line;
     private final String spacer;
@@ -44,8 +39,9 @@ public class InstList {
     private String stackb;
     private String localsb;
     
-    public InstList(StackLocals stacklocals, Line line, EnumMap<ReservedWord, Integer> options) {
-        this.instructions = new ArrayList<>();
+    public InstList(JynxCodeNodeBuilder codenode, StackLocals stacklocals,
+            Line line, EnumMap<ReservedWord, Integer> options) {
+        this.codeNode = codenode;
         this.stackLocals = stacklocals;
         this.line = line;
         int indent = line.getIndent();
@@ -66,6 +62,10 @@ public class InstList {
 
     public Line getLine() {
         return line;
+    }
+
+    public StackLocals getStackLocals() {
+        return stackLocals;
     }
 
     private void printStack() {
@@ -99,53 +99,32 @@ public class InstList {
         }
     }
 
-    public void add(JynxInstruction insn) {
-        if (addLineNumber && insn.jvmop().canThrow()) {
-            int lnum = line.getLinect();
+    public void add(JynxInstructionNode insn) {
+        if (addLineNumber && insn.canThrow()) {
+            int lnum = line.getLinect() / 10;
             addInsn(new LineInstruction(lnum, line));    
             addLineNumber = false;
         }
         addInsn(insn);
     }
 
-    private void addInsn(JynxInstruction insn) {
-        if (false && stackLocals.addNop(insn)) {
-            var nop = OpcodeInstruction.getInstance(JvmOp.asm_nop, line);
-            addInsnX(nop);
-        }
-        addInsnX(insn);
-    }
-    
-    private void addInsnX(JynxInstruction insn) {
+    private void addInsn(JynxInstructionNode insn) {
         if (expand) {
             LOG(M292,spacer,insn); // "%s  +%s"
         }
         boolean ok = stackLocals.visitInsn(insn, line);
         if (ok) {
-            instructions.add(insn);
+            codeNode.addInstruction(insn);
             if (expand) {
                 printStackLocals();
             }
         }
     }
 
-    public void accept(JynxCodeNodeBuilder codenode) {
-        codenode.addInstructionList(instructions);
+    public void visitEnd() {
         if (!expand) {
             printStackLocals();
         }
-    }
-    
-    public FrameElement peekTOS() {
-        return stackLocals.stack().peekTOS();
-    }
-    
-    public FrameElement peekVarNum(Token token) {
-        return stackLocals.locals().peekVarNumber(token);
-    }
-    
-    public JvmOp getReturnOp() {
-        return stackLocals.getReturnOp();
     }
     
     public boolean isUnreachable() {

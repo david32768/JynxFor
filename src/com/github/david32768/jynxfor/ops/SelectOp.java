@@ -1,9 +1,6 @@
 package com.github.david32768.jynxfor.ops;
 
-import com.github.david32768.jynxfor.scan.Line;
-
-import jynx2asm.InstList;
-
+@FunctionalInterface
 public interface SelectOp extends JynxOp {
 
     @Override
@@ -11,6 +8,6 @@ public interface SelectOp extends JynxOp {
         return null;
     }
     
-    public JynxOp getOp(Line line, InstList instlist);
+    public JynxOp getOp(CurrentState state);
 
 }

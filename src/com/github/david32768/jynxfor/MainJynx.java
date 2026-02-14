@@ -36,6 +36,11 @@ public class MainJynx implements MainOptionService {
     }
 
     @Override
+    public String version() {
+        return "0.25.2";
+    }
+    
+    @Override
     public boolean call(PrintWriter pw) {
         if (!OPTION(SYSIN)) {
             LOG(M222,SYSIN); // "either option %s is specified or file name is present but not both"
@@ -113,10 +118,7 @@ public class MainJynx implements MainOptionService {
         cfname += ".class";
         Path pathc = Paths.get(cfname);
         if (!OPTION(SYSIN)) {
-            Path parent = Paths.get(fname).getParent();
-            if (parent != null) {
-                pathc = parent.resolve(pathc);
-            }
+            pathc = Paths.get(fname).resolveSibling(pathc);
         }
         Files.write(pathc, bytes);
          // "%s created - size %d bytes"

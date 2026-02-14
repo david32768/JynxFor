@@ -30,6 +30,11 @@ public class LdcInstruction extends AbstractInstruction {
     }
 
     @Override
+    public boolean canThrow() {
+        return ct == ConstType.ct_const_dynamic; 
+    }
+
+    @Override
     public void accept(MethodVisitor mv) {
         mv.visitLdcInsn(cst);
     }

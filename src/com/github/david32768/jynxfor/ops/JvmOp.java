@@ -19,7 +19,6 @@ import static com.github.david32768.jynxfor.my.Message.M362;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
-import com.github.david32768.jynxfree.classfile.Opcodes;
 import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jvm.JvmVersion;
 import com.github.david32768.jynxfree.jvm.JvmVersionRange;
@@ -227,7 +226,6 @@ public enum JvmOp implements JynxOp {
     opc_iload_2(28, 1, "()I", arg_var, ILOAD),
     opc_iload_3(29, 1, "()I", arg_var, ILOAD),
     opc_iload_w(21, 4, "()I", arg_var, ILOAD),
-    opc_invokenonvirtual(183, true, 3, null, arg_method, INVOKESPECIAL, Feature.invokenonvirtual),
     opc_istore_0(59, 1, "(I)V", arg_var, ISTORE),
     opc_istore_1(60, 1, "(I)V", arg_var, ISTORE),
     opc_istore_2(61, 1, "(I)V", arg_var, ISTORE),
@@ -252,12 +250,14 @@ public enum JvmOp implements JynxOp {
 
     opc_wide(196, null, "()V", arg_none, NOP),
 
+    // in alphabetic order
     xxx_goto_weak(-3, 5, "()V", arg_label, GOTO),
     xxx_label(-1, 0, "()V", arg_dir, -1),
     xxx_label_weak(-1, 0, "()V", arg_dir, -1),
     xxx_line(-2, 0, "()V", arg_dir, -2),
     ;
         
+    private final Opcode cfOpcode;
     private final String externalName ;
     private final int opcode;
     private final Integer length;
@@ -277,12 +277,17 @@ public enum JvmOp implements JynxOp {
 
     private JvmOp(int opcode, boolean canThrow, Integer length, String desc, OpArg args, int asmOpcode, Feature requires) {
         this.externalName = name().substring(4);
+        this.cfOpcode = opcode >= 0? opcodeOf(externalName): null;
         this.opcode = opcode;
         this.canThrow = canThrow;
         this.length = length;
         this.asmOpcode = asmOpcode;
         this.args = args;
         this.requires = requires;
+        assert cfOpcode == null
+                || cfOpcode.sizeIfFixed() == -1 && length == null 
+                || cfOpcode.sizeIfFixed() == length:
+                String.format("Opcode size = %d but JvmOp length is %s", cfOpcode.sizeIfFixed(), length);
         assert desc == null // operand based stack change
                 || args == arg_stack  && NameDesc.STACKOP_DESC.isValid(desc)
                 || NameDesc.OP_DESC.isValid(desc):String.format("%s is invalid as op stack descriptor",desc);
@@ -327,12 +332,11 @@ public enum JvmOp implements JynxOp {
                         boolean samethrow = mapop.canThrow == op.canThrow;
                         
                         boolean validsame = sameargs && samethrow && (samevar || sameswitch);
-                        boolean nonvirtual = sameargs && mapop == asm_invokespecial && op == opc_invokenonvirtual;
                         
                         if (validsame && !samefeature) {
                             // "%s is null or has different feature requirement than %s"
                             throw new LogIllegalArgumentException(M302,op,mapop);
-                        } else if (!validsame && !nonvirtual){
+                        } else if (!validsame){
                             LOG(M274,op,opcode,mapop); // "duplicate: %s has the same opcode(%d) as %s"
                             ok = false;
                         }
@@ -355,6 +359,14 @@ public enum JvmOp implements JynxOp {
         }
     }
     
+    private static Opcode opcodeOf(String name) {
+        return switch(name.toUpperCase()) {
+            case "SWITCH" -> Opcode.LOOKUPSWITCH;
+            case "WIDE" -> null;
+            default -> Opcode.valueOf(name.toUpperCase());
+        };
+    }
+    
     public static JvmOp getInstance(int opcode, JvmVersion jvmversion) {
         JvmOp result =  CODEMAP[opcode];
         assert Objects.nonNull(result);
@@ -367,7 +379,7 @@ public enum JvmOp implements JynxOp {
     }
     
     public Opcode getOpcode() {
-        return Opcodes.of(this.opcode);
+        return cfOpcode;
     }
 
     public boolean canThrow() {
@@ -425,18 +437,23 @@ public enum JvmOp implements JynxOp {
     }
     
     public boolean isStoreVar() {
-        checkArg(arg_var);
+        checkArg(arg_var, arg_incr);
         return externalName.substring(1).startsWith("store");
     }
     
-    private void checkArg(OpArg expected) {
+    public boolean isLoadVar() {
+        checkArg(arg_var, arg_incr);
+        return externalName.substring(1).startsWith("load");
+    }
+    
+    public void checkArg(OpArg expected) {
         if (args != expected) {
             // "expected arg %s but was %s"
             throw new LogIllegalArgumentException(M362,expected,args);
         }
     }
     
-    private void checkArg(OpArg first, OpArg... rest) {
+    public void checkArg(OpArg first, OpArg... rest) {
         EnumSet<OpArg> expected = EnumSet.of(first, rest);
         if (!expected.contains(args)) {
             // "expected arg %s but was %s"
@@ -472,7 +489,13 @@ public enum JvmOp implements JynxOp {
     }
     
     public static JvmOp of(Opcode op) {
-        return getOp(op.bytecode());
+        int code = op.bytecode();
+        if (code > 255) {
+            int prefix = code >> 8;
+            assert prefix == opc_wide.asmOpcode;
+            return getOp(code & 0xFF).wideFormOf();
+        }
+        return getOp(code);
     }
     
     private JvmOp getSuffixedOp(Object suffix) {

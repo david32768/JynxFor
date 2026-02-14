@@ -131,6 +131,12 @@ public class JynxLabelMap {
                     .anyMatch(c -> c.to().equals(label));
     }
    
+    public boolean isEndAllTry(JynxLabel label) {
+        return catches.keySet().stream()
+                    .filter(c -> c.exception() == null)
+                    .anyMatch(c -> c.to().equals(label));
+    }
+   
     public Set<JynxLabel> getThrowsTo(JynxLabel label) {
         label = getBase(label);
         Set<JynxLabel> result = new HashSet<>();

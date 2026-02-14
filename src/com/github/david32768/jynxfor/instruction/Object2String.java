@@ -121,7 +121,7 @@ public class Object2String {
             case ct_long -> long2String(value);
             case ct_float -> float2String(value);
             case ct_double -> double2String(value);
-            case ct_string -> StringUtil.QuoteEscape((String)value);
+            case ct_string -> StringUtil.quoteEscape((String)value);
             case ct_method_handle -> handle2String(value);
             case ct_const_dynamic -> constDynamic2String(value);
             default -> value.toString();

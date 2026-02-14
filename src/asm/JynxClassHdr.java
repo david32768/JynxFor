@@ -91,7 +91,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         unique_checker.checkUnique(dir, line);
         if (Constants.isObjectClass(cname)) {
             switch(dir) {
-                case dir_debug, dir_source -> {}
+                case dir_debug, dir_source, dir_annotation -> {}
                 default -> {
                     line.skipTokens();
                     // "Directive %s is not valid for %s"

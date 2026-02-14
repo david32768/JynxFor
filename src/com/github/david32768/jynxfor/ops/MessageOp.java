@@ -5,13 +5,9 @@ import static com.github.david32768.jynxfor.my.Message.M322;
 
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
-import com.github.david32768.jynxfor.scan.Line;
-
 import com.github.david32768.jynxfree.jynx.JynxMessage;
 
-import jynx2asm.LabelStack;
-
-public class MessageOp implements LineOp {
+public class MessageOp implements JynxOp {
     
     private static enum MessageType {
        IGNORE(M320), // "occurences of %s have been ignored: %s"
@@ -34,8 +30,7 @@ public class MessageOp implements LineOp {
         this.aux = aux;
     }
 
-    @Override
-    public void adjustLine(Line line, int macrolevel, MacroOp macroop, LabelStack labelStack){
+    public void logMessage(MacroOp macroop){
         LOG(type.msg,macroop,aux);
     }
 
@@ -44,11 +39,11 @@ public class MessageOp implements LineOp {
         return String.format("*%s %s", type, aux);
     }
 
-    public static LineOp ignoreMacro(String msg) {
+    public static MessageOp ignoreMacro(String msg) {
         return new MessageOp(MessageOp.MessageType.IGNORE,msg);
     }
     
-    public static LineOp unsupportedMacro(String msg) {
+    public static MessageOp unsupportedMacro(String msg) {
         return new MessageOp(MessageOp.MessageType.UNSUPPORTED,msg);
     }
     

@@ -44,12 +44,12 @@ public class String2Object {
     }
     
     public long decodeLong(String token, NumType nt) {
-        if ((nt == NumType.t_long || nt == NumType.t_int) && isUnsigned(token)) {
+        token = removeL(token, nt);
+        if (isUnsigned(token, nt)) {
             return decodeUnsignedLong(token, nt);
         }
-        token = removeL(token, nt);
         try {
-            long var = parseLong(token);
+            long var = Long.parseLong(token);
             nt.checkInRange(var);
             return var;
         } catch(NumberFormatException nex) {
@@ -59,16 +59,7 @@ public class String2Object {
         }
     }
 
-    private long parseLong(String token) {
-        if (token.toUpperCase().startsWith("0X")) {
-            return Long.parseLong(token.substring(2), 16);
-        } else {
-            return Long.parseLong(token);
-        }
-    }
-    
     public long decodeUnsignedLong(String token, NumType nt) {
-        token = removeL(token, nt);
         token = removeLastIf(token, 'U');
         try {
             long var = parseUnsignedLong(token);
@@ -147,9 +138,11 @@ public class String2Object {
         return Character.toUpperCase(x) == Character.toUpperCase(y);
     }
     
-     private boolean isUnsigned(String token) {
-        token = removeLastIf(token, 'L');
-        return isEqualIgnoreCase(token.charAt(token.length() - 1), 'U');
+     private boolean isUnsigned(String token, NumType nt) {
+         String uc = token.toUpperCase();
+         return nt == NumType.t_char
+                 || uc.endsWith("U")
+                 || uc.startsWith("0X");
     }
      
     private ConstType typeConstant(String constant) {

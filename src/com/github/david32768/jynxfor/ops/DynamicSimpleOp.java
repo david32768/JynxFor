@@ -5,7 +5,8 @@ import java.util.Objects;
 import org.objectweb.asm.ConstantDynamic;
 
 import com.github.david32768.jynxfor.instruction.DynamicInstruction;
-import com.github.david32768.jynxfor.instruction.JynxInstruction;
+import com.github.david32768.jynxfor.my.JynxGlobal;
+import com.github.david32768.jynxfor.node.JynxInstructionNode;
 import com.github.david32768.jynxfor.scan.Line;
 
 import com.github.david32768.jynxfree.jynx.NameDesc;
@@ -43,7 +44,7 @@ public class DynamicSimpleOp implements DynamicOp {
     }
 
     @Override
-    public JynxInstruction getInstruction(Line line, ClassChecker checker) {
+    public JynxInstructionNode getInstruction(Line line, ClassChecker checker) {
         String namex = name;
         String descx = desc;
         if (namex == null) {
@@ -58,6 +59,7 @@ public class DynamicSimpleOp implements DynamicOp {
         }
         if (descx == null) {
             descx = line.nextToken().asString();
+            descx = JynxGlobal.TRANSLATE_DESC(descx);
         }
         JynxConstantDynamic jcd = new JynxConstantDynamic(line, checker);
         ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus,bootparms);
