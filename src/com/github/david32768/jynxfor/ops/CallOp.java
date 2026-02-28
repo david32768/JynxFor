@@ -3,45 +3,42 @@ package com.github.david32768.jynxfor.ops;
 import java.lang.invoke.MethodType;
 
 import com.github.david32768.jynxfree.jvm.Feature;
-import com.github.david32768.jynxfree.jvm.JvmVersionRange;
+import com.github.david32768.jynxfree.jvm.OpArg;
 
-public class CallOp implements MacroOp {
+public class CallOp {
+
+    private CallOp() {}
     
-    private final JynxOp[] jynxops;
-    private final Feature feature;
 
-    private CallOp(JynxOp[] jynxops, Feature feature) {
-        this.jynxops = jynxops;
-        this.feature = feature;
-    }
-
-    @Override
-    public JynxOp[] getJynxOps() {
-        return jynxops;
-    }
-
-    @Override
-    public JvmVersionRange range() {
-        return feature.range();
-    }
     
-    public static CallOp of(String classname, String methodname, String desc) {
-        return of(classname, methodname, desc, Feature.unlimited);
+    public static MacroOp ofStatic(String classname, String methodname, String desc) {
+        return of(classname, methodname, desc, JvmOp.asm_invokestatic, Feature.unlimited);
     }
 
-    public static CallOp of(Class<?> klass, String methodname, String desc) {
-        return of(className(klass), methodname, desc, Feature.unlimited);
+    public static MacroOp ofStatic(Class<?> klass, String methodname, String desc) {
+        return of(className(klass), methodname, desc, JvmOp.asm_invokestatic, Feature.unlimited);
     }
 
-    public static CallOp of(Class<?> klass, String methodname, String desc, Feature feature) {
-        return of(className(klass), methodname, desc, feature);
+    public static MacroOp ofStatic(Class<?> klass, String methodname, String desc, Feature feature) {
+        return of(className(klass), methodname, desc, JvmOp.asm_invokestatic, feature);
     }
 
-    public static CallOp of(String classname, String methodname, String desc, Feature feature) {
-        JynxOp[] jynxops = new JynxOp[2];
-        jynxops[0] = AdjustToken.insertMethod(classname, methodname, desc);
-        jynxops[1] = JvmOp.asm_invokestatic;
-        return new CallOp(jynxops, feature);
+    public static MacroOp ofVirtual(String classname, String methodname, String desc) {
+        return of(classname, methodname, desc, JvmOp.asm_invokevirtual, Feature.unlimited);
+    }
+
+    public static MacroOp ofVirtual(Class<?> klass, String methodname, String desc) {
+        return of(className(klass), methodname, desc, JvmOp.asm_invokevirtual, Feature.unlimited);
+    }
+
+    private static MacroOp of(String classname, String methodname, String desc, JvmOp op, Feature feature) {
+        assert op.args() == OpArg.arg_method;
+        JynxOp insm = AdjustToken.insertMethod(classname, methodname, desc);
+        if (feature == Feature.unlimited) {
+            return MacroOp.of(insm, op);
+        } else {
+            return MacroOp.of(LineOp.checkVersion(feature), insm, op);            
+        }
     }
 
     public static String className(Class<?> klass) {

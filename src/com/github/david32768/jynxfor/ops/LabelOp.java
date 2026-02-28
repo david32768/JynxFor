@@ -6,11 +6,6 @@ import jynx2asm.LabelStack;
 
 public interface LabelOp extends JynxOp {
 
-    @Override
-    default public Integer length(){
-        return 0;
-    }
-    
     public void adjustLine(Line line, int macrolevel, LabelStack labelStack);
 
 }

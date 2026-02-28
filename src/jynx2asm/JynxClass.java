@@ -156,7 +156,7 @@ public class JynxClass implements ContextDependent,DirectiveConsumer {
         JynxTranslator translator = JynxTranslator.getInstance();
         JynxGlobal.set();
         JynxGlobal.setTranslator(translator);
-        this.opmap = JynxOps.getInstance(jvmVersion, translator);
+        this.opmap = JynxOps.getInstance(translator);
     }
     
     private void setOptions(Line line) {

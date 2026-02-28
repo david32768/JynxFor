@@ -21,7 +21,6 @@ import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
 import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jvm.JvmVersion;
-import com.github.david32768.jynxfree.jvm.JvmVersionRange;
 import com.github.david32768.jynxfree.jvm.NumType;
 import com.github.david32768.jynxfree.jvm.OpArg;
 import com.github.david32768.jynxfree.jynx.LogIllegalArgumentException;
@@ -370,7 +369,7 @@ public enum JvmOp implements JynxOp {
     public static JvmOp getInstance(int opcode, JvmVersion jvmversion) {
         JvmOp result =  CODEMAP[opcode];
         assert Objects.nonNull(result);
-        jvmversion.checkSupports(result);
+        jvmversion.checkSupports(result.feature());
         return result;
     }
 
@@ -390,7 +389,6 @@ public enum JvmOp implements JynxOp {
         return opcode;
     }
 
-    @Override
     public Integer length() {
         return length;
     }
@@ -405,11 +403,6 @@ public enum JvmOp implements JynxOp {
 
     public Feature feature() {
         return requires;
-    }
-
-    @Override
-    public JvmVersionRange range() {
-        return requires.range();
     }
 
     public boolean isImmediate() {

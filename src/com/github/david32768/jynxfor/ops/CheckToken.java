@@ -19,7 +19,7 @@ public class CheckToken implements LineOp {
     private final Message msg;
     private final Object check;
 
-    public CheckToken(Predicate<Token> pred, Message msg, Object check) {
+    private CheckToken(Predicate<Token> pred, Message msg, Object check) {
         this.pred = pred;
         this.msg = msg;
         this.check = check;
@@ -28,7 +28,7 @@ public class CheckToken implements LineOp {
     @Override
     public void adjustLine(CurrentState state) {
         var token = state.line().peekToken();
-        if (!pred.test(token)) {
+        if (!pred.test(token) && msg != null) {
             throw new LogIllegalArgumentException(msg, check, token);
         }
     }
@@ -53,4 +53,5 @@ public class CheckToken implements LineOp {
         // "token not in range %s: token = %d"
         return new CheckToken(tok -> tok.asLong() >= start && tok.asLong() < end, M418, msg);
     }
+    
 }

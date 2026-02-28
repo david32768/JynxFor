@@ -40,6 +40,7 @@ import com.github.david32768.jynxfor.scan.TokenArray;
 
 import com.github.david32768.jynxfree.jvm.ConstantPoolType;
 import com.github.david32768.jynxfree.jvm.Context;
+import com.github.david32768.jynxfree.jvm.Feature;
 import com.github.david32768.jynxfree.jvm.HandleType;
 import com.github.david32768.jynxfree.jvm.OpArg;
 import com.github.david32768.jynxfree.jynx.GlobalOption;
@@ -147,6 +148,11 @@ public class String2Insn {
         if (multi) {
             LOG(M254,jop); // "%s is used in a macro after a mulit-line op"
         }
+        ++macroCount;
+        if (macroCount > MAX_MACROS_FOR_LINE) {
+            // "number of macro ops exceeds maximum of %d for %s"
+            throw new LogIllegalStateException(M317, MAX_MACROS_FOR_LINE, macrostack.peekFirst());
+        }
         switch (jop) {
             case SelectOp selector ->
                 add(selector.getOp(state), state, macrostack, macct, instlist);
@@ -157,11 +163,6 @@ public class String2Insn {
             case LineOp lineop -> lineop.adjustLine(state);
             case MacroOp macroop -> {
                 macrostack.addLast(macroop);
-                ++macroCount;
-                if (macroCount > MAX_MACROS_FOR_LINE) {
-                    // "number of macro ops exceeds maximum of %d for %s"
-                    throw new LogIllegalStateException(M317, MAX_MACROS_FOR_LINE, macrostack.peekFirst());
-                }
                 macct = macroCount;
                 for (JynxOp mjop:macroop.getJynxOps()) {
                     add(mjop, state, macrostack, macct, instlist);
@@ -180,6 +181,9 @@ public class String2Insn {
     }
 
     private void addJvmOp(JvmOp jvmop, InstList instlist) {
+        if (jvmop.feature() != Feature.unlimited) {
+            CHECK_SUPPORTS(jvmop.feature());
+        }
         OpArg oparg = jvmop.args();
         JynxInstructionNode insn = switch(oparg) {
             case arg_atype -> arg_atype(jvmop);

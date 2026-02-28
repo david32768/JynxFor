@@ -1,26 +1,18 @@
 package com.github.david32768.jynxfor.ops;
 
-import java.io.PrintWriter;
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.function.Predicate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
 import static com.github.david32768.jynxfor.my.Message.M176;
 import static com.github.david32768.jynxfor.my.Message.M243;
-import static com.github.david32768.jynxfor.my.Message.M267;
 import static com.github.david32768.jynxfor.my.Message.M316;
 import static com.github.david32768.jynxfor.my.Message.M318;
 
 import static com.github.david32768.jynxfree.jynx.Global.ADD_OPTION;
 import static com.github.david32768.jynxfree.jynx.Global.LOG;
 
-import com.github.david32768.jynxfree.jvm.Feature;
-import com.github.david32768.jynxfree.jvm.JvmVersion;
-import com.github.david32768.jynxfree.jvm.JvmVersionRange;
 import com.github.david32768.jynxfree.jynx.LogAssertionError;
 import com.github.david32768.jynxfree.jynx.NameDesc;
 
@@ -28,22 +20,20 @@ public class JynxOps {
 
     private final Map<String, JynxOp> opmap;
     private final Map<String,MacroLib> macrolibs;
-    private final JvmVersion jvmVersion;
     
     private Predicate<String> labelTester;
     
     private final JynxTranslator translator;
     
 
-    private JynxOps(JvmVersion jvmversion, JynxTranslator translator) {
+    private JynxOps(JynxTranslator translator) {
         this.opmap = new HashMap<>(512);
         this.macrolibs = new HashMap<>();
-        this.jvmVersion = jvmversion;
         this.translator = translator;
     }
 
-    public static JynxOps getInstance(JvmVersion jvmversion, JynxTranslator translator) {
-        return new JynxOps(jvmversion, translator);
+    public static JynxOps getInstance(JynxTranslator translator) {
+        return new JynxOps(translator);
     }
 
     private static final int MAX_SIMPLE = 16;
@@ -57,11 +47,6 @@ public class JynxOps {
         if (before != null) {
             LOG(M243, name, op.getClass(), before.getClass()); // "%s op defined in %s has already been defined in %s"
         }
-        int opct = expandLevel(op).size();  // check max level (in call)
-        if (opct > MAX_SIMPLE) {  // check max simple instructions
-            // "%s has %d simple ops which exceeds maximum of %d"
-            throw new LogAssertionError(M267, op, opct,MAX_SIMPLE);
-        }
     }
 
     public JynxOp get(String jopstr) {
@@ -72,7 +57,6 @@ public class JynxOps {
                 return null;
             }
         }
-        jvmVersion.checkSupports(op);
         return op;
     }
     
@@ -110,71 +94,6 @@ public class JynxOps {
    
     public boolean isLabel(String labstr) {
         return labelTester != null && labelTester.test(labstr);
-    }
-
-    public static Integer length(MacroOp macop) {
-        List<Map.Entry<JynxOp, Integer>> oplist = expandLevel(macop);
-        int sz = 0;
-        for (Map.Entry<JynxOp, Integer>  me:oplist) {
-            Integer oplen = me.getKey().length();
-            if (oplen == null) {
-                return null;
-            }
-            sz += oplen;
-        }
-        return sz;
-    }
-
-    public static JvmVersionRange range(MacroOp macop) {
-        JvmVersionRange range = Feature.unlimited.range();
-        for (JynxOp op : macop.getJynxOps()) {
-            range = range.intersect(op.range());
-        }
-        return range;
-    }
-
-    private static List<Map.Entry<JynxOp, Integer>> expandLevel(JynxOp jop) {
-        List<Map.Entry<JynxOp, Integer>> oplist = new ArrayList<>();
-        JynxOps.expandLevel(oplist, jop, 0);
-        return oplist;
-    }
-
-    private static void expandLevel(List<Map.Entry<JynxOp, Integer>> oplist, JynxOp jop, int level) {
-        JvmVersionRange.checkLevel(level);
-        if (jop instanceof MacroOp macroOp) {
-            JynxOp[] ops = macroOp.getJynxOps();
-            int opct = ops.length;
-            if (opct > MAX_SIMPLE) {  // check max simple instructions
-                // "%s has %d simple ops which exceeds maximum of %d"
-                throw new LogAssertionError(M267, jop, opct,MAX_SIMPLE);
-            }
-            for (JynxOp op : ops) {
-                JynxOps.expandLevel(oplist, op, level + 1);
-            }
-        } else {
-            Map.Entry<JynxOp, Integer> pair = new AbstractMap.SimpleImmutableEntry<>(jop, level);
-            oplist.add(pair);
-        }
-    }
-
-    private static void print(PrintWriter pw, JynxOp jop) {
-        print(pw, jop, 0);
-    }
-
-    private static void print(PrintWriter pw, JynxOp jop, int level) {
-        JvmVersionRange.checkLevel(level);
-        StringBuilder sb = new StringBuilder(2 * level);
-        for (int i = 0; i < level; ++i) {
-            sb.append("  ");
-        }
-        String spacer = sb.toString();
-        String basic = jop instanceof JvmOp ? "" : " *";
-        pw.format("%s%s%s%n", spacer, jop, basic);
-        if (jop instanceof MacroOp macroOp) {
-            for (JynxOp op : macroOp.getJynxOps()) {
-                print(pw, op, level + 1);
-            }
-        }
     }
 
 }

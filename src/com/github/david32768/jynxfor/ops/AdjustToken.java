@@ -41,11 +41,6 @@ public class AdjustToken implements LineOp {
     }
 
     @Override
-    public Integer length() {
-        return 0;
-    }
-
-    @Override
     public void adjustLine(CurrentState state) {
         Line line = state.line();
         String tokenstr = switch(type) {

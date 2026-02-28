@@ -163,7 +163,6 @@ public enum Message implements JynxMessage {
     M264(ERROR,"structured op mismatch: index %d in label stack is not in  range [0,%d]"),
     M265(ERROR,"structured op mismatch: label stack is empty"),
     M266(ERROR,"Label %s not defined; used in%n%s"),
-    M267(ERROR,"%s has %d simple ops which exceeds maximum of %d"),
     M268(ERROR,"enclosing instance has already been defined%n   %s"),
     M269(ERROR,"component %s description %s differs from field description %s"),
     M270(WARNING,"%s directive missing but assumed"),

@@ -37,7 +37,7 @@ public class MainJynx implements MainOptionService {
 
     @Override
     public String version() {
-        return "0.25.2";
+        return "0.25.3";
     }
     
     @Override

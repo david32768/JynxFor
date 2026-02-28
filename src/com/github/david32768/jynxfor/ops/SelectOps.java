@@ -85,7 +85,7 @@ public enum SelectOps implements SelectOp {
     private final static int F_NAN_CANONICAL = Float.floatToRawIntBits(Float.NaN);
     private final static int F_NAN_LIMIT = 1 << 23;
     private final static int JAVA_F_NAN_SUFFIX = F_NAN_CANONICAL & ~F_NAN_PREFIX;
-    private final static CallOp inv_iasf = CallOp.of(Float.class,"intBitsToFloat","(I)F");
+    private final static MacroOp inv_iasf = CallOp.ofStatic(Float.class,"intBitsToFloat","(I)F");
 
     private static JynxOp getFldc(CurrentState state) {
         Line line = state.line();
@@ -136,7 +136,7 @@ public enum SelectOps implements SelectOp {
     private final static long D_NAN_CANONICAL = Double.doubleToRawLongBits(Double.NaN);
     private final static long D_NAN_LIMIT = 1L << 52;
     private final static long JAVA_D_NAN_SUFFIX = D_NAN_CANONICAL & ~D_NAN_PREFIX;
-    private final static CallOp inv_lasd = CallOp.of(Double.class,"longBitsToDouble","(J)D");
+    private final static MacroOp inv_lasd = CallOp.ofStatic(Double.class,"longBitsToDouble","(J)D");
 
     private static JynxOp getDldc(CurrentState state) {
         Line line = state.line();
