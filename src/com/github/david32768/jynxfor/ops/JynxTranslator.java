@@ -34,7 +34,7 @@ public class JynxTranslator {
     }
     
     public void addParmTranslations(Map<String, String> add) {
-        addTranslations(parmTranslations, add, NameDesc.PARM_VALUE_NAME);
+        addTranslations(parmTranslations, add, NameDesc.FIELD_DESC);
     }
     
     private void addTranslations(Map<String, String> map, Map<String, String> add, NameDesc valuetype) {

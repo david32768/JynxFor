@@ -230,6 +230,7 @@ public enum Message implements JynxMessage {
     M354(WARNING,"adjusted token with enquote rather than enclosed with '\"'"),
     M355(ERROR,"%s is not a valid nan suffix"),
     M356(ERROR,"check token failure: %s"),
+    M357(ERROR,"class has more than 65535 constant pool entries"),
     M362(ERROR,"expected arg %s but was %s"),
     M370(ERROR,"Type annotations not allowed for Module"),
     M394(ERROR,"END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"),

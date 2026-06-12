@@ -2,10 +2,12 @@ package asm;
 
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Attribute;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.TypePath;
 
@@ -266,9 +268,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     private void setDescriptors(Line line) {
-        // "known attribute %s not supported"
-        LOG(M655, StandardAttribute.LoadableDescriptors);
-        var _ = TokenArray.listString(Directive.dir_descriptors, line, CLASS_PARM);
+        List<String> classes = TokenArray.listString(Directive.dir_descriptors, line, CLASS_PARM);
+        if (IS_VALHALLA()) {
+            Attribute attr = new JynxLoadableDescriptors(classes);
+            hdrnode.visitAttribute(attr);
+        } else {
+            // "known attribute %s not supported"
+            LOG(M655, StandardAttribute.LoadableDescriptors);
+        }
     }
 
     private void setPermittedSubclass(Line line) {

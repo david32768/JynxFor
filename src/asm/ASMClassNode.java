@@ -5,6 +5,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodTooLargeException;
 
 import static com.github.david32768.jynxfree.jynx.Global.*;
+
+import static com.github.david32768.jynxfor.my.Message.M357;
 import static com.github.david32768.jynxfree.jvm.StandardAttribute.StackMapTable;
 
 import com.github.david32768.jynxfor.verify.Resolver;
@@ -33,7 +35,11 @@ public class ASMClassNode extends JynxClassNode {
         byte[] ba = null;
         try {
             ba = cw.toByteArray();
-        } catch (ClassTooLargeException | MethodTooLargeException ex) {
+        } catch (ClassTooLargeException ex) {
+            // "class has more than 65535 constant pool entries"
+            LOG(M357);
+            LOG(ex);
+        } catch (MethodTooLargeException ex) {
             LOG(ex);
         }
         return ba;

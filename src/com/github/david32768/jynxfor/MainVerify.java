@@ -19,6 +19,11 @@ public class MainVerify implements MainOptionService {
     }
 
     @Override
+    public String version() {
+        return "0.25.4";
+    }
+    
+    @Override
     public boolean call(PrintWriter pw, String fname) {
         return call(fname, new Verifier(new Resolver()));
     }

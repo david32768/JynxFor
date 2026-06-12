@@ -123,4 +123,7 @@ public class AdjustToken implements LineOp {
     public final static AdjustToken xxx_dvarindex = new AdjustToken(Adjustment.TRANSFORM,
         (state, s) -> state.indexOf('d', s));
     
+    public final static AdjustToken xxx_avarindex = new AdjustToken(Adjustment.TRANSFORM,
+        (state, s) -> state.indexOf('a', s));
+    
 }

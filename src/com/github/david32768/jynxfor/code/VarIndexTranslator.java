@@ -13,6 +13,7 @@ public class VarIndexTranslator {
     private final Map<String,Integer> lmap;
     private final Map<String,Integer> fmap;
     private final Map<String,Integer> dmap;
+    private final Map<String,Integer> amap;
     
     private final Map<String,Character> checker;
 
@@ -21,6 +22,7 @@ public class VarIndexTranslator {
         this.lmap = new HashMap<>();
         this.fmap = new HashMap<>();
         this.dmap = new HashMap<>();
+        this.amap = new HashMap<>();
         this.checker = new HashMap<>();
     }
     
@@ -35,6 +37,7 @@ public class VarIndexTranslator {
             case 'l' -> lmap.computeIfAbsent(name, k -> lmap.size());
             case 'f' -> fmap.computeIfAbsent(name, k -> fmap.size());
             case 'd' -> dmap.computeIfAbsent(name, k -> dmap.size());
+            case 'a' -> dmap.computeIfAbsent(name, k -> amap.size());
             default -> throw new AssertionError("vt = " + vt);
         };
     }
